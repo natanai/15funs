@@ -33,11 +33,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .panel a:hover{text-decoration:none}
 .library-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}
 .library-head h2{margin:0}
-.library-columns{display:grid;gap:16px}
-@media (min-width: 1100px){.library-columns{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);}}
-.library-subhead{margin:0 0 8px;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.library-history{padding-top:6px;border-top:1px dashed #00000025}
-@media (min-width: 1100px){.library-history{border-top:none;border-left:1px dashed #00000025;padding-left:14px;}}
 .card{position:sticky;top:84px}
 .card-body{min-height:160px;display:grid;place-content:center;gap:10px;text-align:center;padding:10px}
 .badge{display:inline-block;padding:4px 8px;background:#00000014;border-radius:999px;border:1px solid #00000018;margin:0 4px}
@@ -49,13 +44,5 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .ideas .right{display:flex;gap:6px;align-items:center}
 .tag{font-size:.8rem;color:var(--muted)}
 .badge.recent{background:color-mix(in oklab, var(--danger), transparent 75%);border-color:transparent}
-.history-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
-.history-item{padding:10px;border:1px solid #00000020;border-radius:12px;display:flex;flex-direction:column;gap:4px;background:#ffffff06}
-.history-item.history-drawn{border-style:dashed;opacity:.9}
-.history-item.history-done{border-color:color-mix(in oklab, var(--accent-2), transparent 40%);background:color-mix(in oklab, var(--accent-2), transparent 90%)}
-.history-item.history-skipped{border-color:color-mix(in oklab, var(--danger), transparent 60%);}
-.history-title{font-weight:600}
-.history-meta{color:var(--muted);font-size:.85rem}
-.history-empty{color:var(--muted);font-style:italic}
 .foot{padding:30px 20px;text-align:center;color:var(--muted)}
 [hidden]{display:none !important}

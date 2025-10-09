@@ -24,72 +24,16 @@ const els = {
   showLibraryBtn: document.getElementById('showLibraryBtn'),
   hideLibraryBtn: document.getElementById('hideLibraryBtn'),
   libraryStatus: document.getElementById('libraryStatus'),
-  historyList: document.getElementById('historyList'),
 };
 
 const STORAGE_KEY = '15funs.v1.state';
 const DEFAULTS = { avoidDays: 7, avoidCount: 10, maxDuration: 15, dataUrl: 'data/ideas.csv' };
-const ALLOWED_NEEDS = [
-  'Love/Caring', 'Nurturing', 'Connection', 'Belonging', 'Support', 'Consideration',
-  'Need for all living things to flourish', 'Inclusion', 'Community', 'Safety', 'Contribution',
-  'Peer Respect', 'Respect', 'Autonomy', 'To be seen', 'Acknowledgement', 'Appreciation', 'Trust',
-  'Dependability', 'Honesty', 'Honor', 'Commitment', 'Clarity', 'Accountability', 'Causality',
-  'Fairness', 'Justice', 'Choice', 'Freedom', 'Reliability', 'Act Freely', 'Choose Freely',
-  'Understanding', 'Recognition', 'Non-judgmental Communication', 'Need to matter', 'Friendship',
-  'Space', 'Peace', 'Serenity', 'Do things at my own pace and in my own way', 'Calm',
-  'Participation', 'To be heard', 'Equality', 'Empowerment', 'Consistency', 'Genuineness', 'Mattering',
-  'Rest', 'Mutuality', 'Relaxation', 'Closeness', 'Authenticity', 'Self expression', 'Integrity',
-  'Empathy', 'Privacy', 'Order', 'Beauty', 'Control', 'Predictability', 'Accomplishment',
-  'Physical Fitness', 'Acceptance', 'Growth', 'Security'
-];
-const NEED_CANON = new Map(ALLOWED_NEEDS.map(name => [name.toLowerCase(), name]));
-const NEED_SYNONYMS = new Map([
-  ['creativity', 'Self expression'],
-  ['creative', 'Self expression'],
-  ['play', 'Participation'],
-  ['playful', 'Participation'],
-  ['closeness', 'Closeness'],
-  ['connection', 'Connection'],
-  ['care', 'Love/Caring'],
-  ['grounding', 'Calm'],
-  ['rest', 'Rest'],
-  ['learning', 'Growth'],
-  ['meaning', 'Need to matter'],
-  ['curiosity', 'Understanding'],
-  ['clarity', 'Clarity'],
-  ['order', 'Order'],
-  ['beauty', 'Beauty'],
-  ['freedom', 'Freedom'],
-  ['serenity', 'Serenity'],
-  ['calm', 'Calm'],
-  ['contribution', 'Contribution'],
-  ['appreciation', 'Appreciation'],
-  ['commitment', 'Commitment'],
-  ['friendship', 'Friendship'],
-  ['love/caring', 'Love/Caring'],
-  ['nurturing', 'Nurturing'],
-  ['physical fitness', 'Physical Fitness'],
-  ['relaxation', 'Relaxation'],
-  ['self expression', 'Self expression'],
-  ['self-expression', 'Self expression'],
-]);
-let timeFormatter;
-try {
-  timeFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-} catch {
-  timeFormatter = null;
-}
 
 let state = loadState();
 let dataset = [];          // {id, title, desc, category, need, duration, energy}
 let deck = [];             // array of idea ids in draw order (we rebuild as needed)
 let deckPtr = -1;          // points at last shown index
 let current = null;        // current idea object
-let currentSource = null;  // 'deck' | 'peek' | 'library' | null
-let currentHasEntry = false; // whether history already has an entry for current
-let currentFinalized = false; // whether current idea has been marked done/skipped
-let lastShownIndex = -1;   // deck index of the last shown idea
-const ideaIndex = new Map();
 
 init().catch(err => showError(err));
 
@@ -107,7 +51,7 @@ async function init() {
   [els.categoryFilter, els.needFilter, els.hideRecentlySeen].forEach(el => el.onchange = filtersChanged);
   els.resetBtn.onclick = resetHistory;
   els.drawBtn.onclick = () => draw({commit:true});
-  els.skipBtn.onclick = skipCurrent;
+  els.skipBtn.onclick = () => draw({commit:false});  // peek new idea without adding to recent
   els.undoBtn.onclick = undoLast;
   els.doneBtn.onclick = markDone;
   els.showLibraryBtn.onclick = showLibrary;
@@ -126,35 +70,12 @@ function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { history: [], settingsVersion: 1 };
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed.history)) parsed.history = [];
-    parsed.history = parsed.history
-      .map(upgradeHistoryEntry)
-      .filter(Boolean);
-    return parsed;
+    return JSON.parse(raw);
   } catch {
     return { history: [], settingsVersion: 1 };
   }
 }
 function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-function upgradeHistoryEntry(entry){
-  if (!entry || typeof entry !== 'object') return null;
-  const upgraded = { ...entry };
-  upgraded.id = upgraded.id ?? upgraded.ideaId ?? null;
-  const numericT = Number(upgraded.t);
-  upgraded.t = Number.isFinite(numericT) ? numericT : now();
-  upgraded.action = upgraded.action ?? 'drawn';
-  if (upgraded.action === 'done' && !Number.isFinite(upgraded.doneAt)) {
-    const numericDone = Number(upgraded.doneAt);
-    upgraded.doneAt = Number.isFinite(numericDone) ? numericDone : upgraded.t;
-  }
-  if (upgraded.action === 'skipped' && !Number.isFinite(upgraded.skippedAt)) {
-    const numericSkip = Number(upgraded.skippedAt);
-    upgraded.skippedAt = Number.isFinite(numericSkip) ? numericSkip : upgraded.t;
-  }
-  return upgraded.id ? upgraded : null;
-}
 
 function persistSettings() {
   state.dataUrl = els.dataUrl.value.trim();
@@ -175,7 +96,6 @@ async function reloadData() {
     populateFilters(dataset);
     rebuildDeck(/*resetPtr=*/true);
     renderList();
-    renderHistory();
     renderCard(null);
     enableControls();
   } catch (e) {
@@ -239,7 +159,7 @@ function normalize(arr) {
     const title = obj.title ?? obj.idea ?? obj.name ?? '';
     const desc  = obj.desc ?? obj.description ?? '';
     const category = obj.category ?? '';
-    const need = normalizeNeed(obj.need ?? '');
+    const need = obj.need ?? '';
     const duration = obj.duration ?? obj.minutes ?? '15';
     const energy = obj.energy ?? '';
     const id = obj.id || makeId(`${title}|${desc}|${category}|${need}|${duration}|${energy}`);
@@ -249,24 +169,8 @@ function normalize(arr) {
     };
   });
 }
-function normalizeNeed(value){
-  if (!value) return '';
-  const trimmed = String(value).trim();
-  if (!trimmed) return '';
-  const lower = trimmed.toLowerCase();
-  if (NEED_CANON.has(lower)) return NEED_CANON.get(lower);
-  if (NEED_SYNONYMS.has(lower)) return NEED_SYNONYMS.get(lower);
-  console.warn(`Need “${value}” is not in the allowed NVC list; it will be hidden from filters.`);
-  return '';
-}
 function indexById(list){
-  ideaIndex.clear();
-  list.forEach(item => {
-    ideaIndex.set(item.id, item);
-  });
-}
-function lookupIdea(id){
-  return ideaIndex.get(id) || null;
+  // No-op, but could build a map if needed. Keeping simple.
 }
 function makeId(str){
   // djb2 hash → base36
@@ -283,9 +187,9 @@ function now(){ return Date.now(); }
 function cutoffTime(days){ return now() - days*24*60*60*1000; }
 
 function getHistory(){ return state.history ?? (state.history = []); }
-function pushHistory(id, action='drawn'){
+function pushHistory(id){
   const h = getHistory();
-  h.push({ id, t: now(), action });
+  h.push({ id, t: now() });
   state.history = h.slice(-2000); // cap growth
   saveState();
 }
@@ -296,34 +200,6 @@ function uniqueRecentIds(count){
     if (!seen.has(id)) { seen.add(id); res.push(id); }
   }
   return res;
-}
-function lastHistoryEntry(){
-  const h = getHistory();
-  return h.length ? h[h.length - 1] : null;
-}
-function finalizeCurrent(action){
-  if (!current) return false;
-  const h = getHistory();
-  const last = h[h.length - 1];
-  const ts = now();
-  if (last && last.id === current.id && last.action === 'drawn' && currentHasEntry && !currentFinalized) {
-    last.action = action;
-    last.t = ts;
-    if (action === 'done') last.doneAt = ts;
-    if (action === 'skipped') last.skippedAt = ts;
-    saveState();
-  } else {
-    pushHistory(current.id, action);
-    const updated = lastHistoryEntry();
-    if (updated) {
-      if (action === 'done') updated.doneAt = updated.t;
-      if (action === 'skipped') updated.skippedAt = updated.t;
-      saveState();
-    }
-  }
-  currentFinalized = true;
-  currentHasEntry = true;
-  return true;
 }
 function idsNotUsedSince(days){
   const cut = cutoffTime(days);
@@ -377,34 +253,18 @@ function draw({commit}){
   // If we ran off the end, rebuild with fresh priorities
   if (nextIdx >= deck.length) { rebuildDeck(true); nextIdx = 0; }
   const idea = deck[nextIdx];
-  if (!idea) {
-    renderCard(null, 'No ideas match your filters.');
-    current = null;
-    currentSource = null;
-    currentHasEntry = false;
-    currentFinalized = false;
-    lastShownIndex = -1;
-    return;
-  }
+  if (!idea) { renderCard(null, 'No ideas match your filters.'); return; }
 
   renderCard(idea);
-  current = idea;
-  currentSource = commit ? 'deck' : 'peek';
-  currentHasEntry = false;
-  currentFinalized = false;
-  lastShownIndex = nextIdx;
-
   els.skipBtn.disabled = false;
   els.doneBtn.disabled = false;
   els.undoBtn.disabled = getHistory().length === 0;
 
   if (commit){
     deckPtr = nextIdx;
-    currentHasEntry = true;
-    pushHistory(idea.id, 'drawn');
-    currentFinalized = false;
+    current = idea;
+    pushHistory(idea.id);
     renderList(); // refresh recent badges
-    renderHistory();
   }
 }
 
@@ -418,32 +278,12 @@ function undoLast(){
     deckPtr--;
   }
   renderList();
-  renderHistory();
   els.undoBtn.disabled = getHistory().length === 0;
   renderCard(null, 'Undid last pick.');
 }
 
 function markDone(){
-  if (!current) return;
-  const hadEntry = currentHasEntry;
-  const source = currentSource;
-  finalizeCurrent('done');
-  renderList();
-  renderHistory();
-
-  if (source === 'peek' && !hadEntry && lastShownIndex > -1) {
-    deckPtr = lastShownIndex;
-  }
-  if (source === 'library' && !hadEntry) {
-    rebuildDeck(true);
-  }
-
-  current = null;
-  currentSource = null;
-  currentHasEntry = false;
-  currentFinalized = false;
-  lastShownIndex = -1;
-
+  // “Done” is the same as committing the current pick; draw the next one immediately.
   draw({commit:true});
 }
 
@@ -453,40 +293,10 @@ function resetHistory(){
   saveState();
   rebuildDeck(true);
   renderList();
-  renderHistory();
   renderCard(null, 'History cleared.');
 }
 
-function skipCurrent(){
-  if (!current) {
-    draw({commit:true});
-    return;
-  }
-  const hadEntry = currentHasEntry;
-  const source = currentSource;
-  finalizeCurrent('skipped');
-  renderList();
-  renderHistory();
-
-  if (source === 'peek' && !hadEntry && lastShownIndex > -1) {
-    deckPtr = lastShownIndex;
-  }
-  if (source === 'library' && !hadEntry) {
-    rebuildDeck(true);
-  }
-
-  current = null;
-  currentSource = null;
-  currentHasEntry = false;
-  currentFinalized = false;
-  lastShownIndex = -1;
-
-  draw({commit:true});
-}
-
 function renderCard(idea, note){
-  if (els.doneBtn) els.doneBtn.disabled = !idea;
-  if (els.skipBtn) els.skipBtn.disabled = !idea;
   if (!idea){
     els.cardBody.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
     return;
@@ -533,14 +343,7 @@ function renderList(){
     }
     const go = document.createElement('button');
     go.textContent = 'Pick';
-    go.onclick = () => {
-      renderCard(item);
-      current = item;
-      currentSource = 'library';
-      currentHasEntry = false;
-      currentFinalized = false;
-      lastShownIndex = -1;
-    };
+    go.onclick = () => { renderCard(item); current = item; };
     right.appendChild(go);
     li.appendChild(left); li.appendChild(right);
     if (!(hideRecent && isRecent)) frag.appendChild(li);
@@ -548,52 +351,9 @@ function renderList(){
   els.ideasList.replaceChildren(frag);
 }
 
-function renderHistory(){
-  if (!els.historyList) return;
-  const h = getHistory();
-  if (!h.length) {
-    const empty = document.createElement('li');
-    empty.className = 'history-empty';
-    empty.textContent = 'No history yet. Mark ideas as done or skipped to see them here.';
-    els.historyList.replaceChildren(empty);
-    return;
-  }
-  const frag = document.createDocumentFragment();
-  const entries = h.slice().reverse().slice(0, 60);
-  entries.forEach(entry => {
-    const li = document.createElement('li');
-    li.className = `history-item history-${entry.action}`;
-    const idea = lookupIdea(entry.id);
-    const when = entry.action === 'done' ? (entry.doneAt ?? entry.t) : entry.action === 'skipped' ? (entry.skippedAt ?? entry.t) : entry.t;
-    const actionLabel = entry.action === 'done' ? 'Done' : entry.action === 'skipped' ? 'Skipped' : 'Drawn';
-    const titleEl = document.createElement('span');
-    titleEl.className = 'history-title';
-    titleEl.textContent = idea ? idea.title : '(removed idea)';
-    const meta = document.createElement('span');
-    meta.className = 'history-meta';
-    const parts = [`${actionLabel} • ${formatTime(when)}`];
-    if (idea?.need) parts.push(`need: ${idea.need}`);
-    meta.textContent = parts.join(' • ');
-    li.appendChild(titleEl);
-    li.appendChild(meta);
-    frag.appendChild(li);
-  });
-  els.historyList.replaceChildren(frag);
-}
-
-function formatTime(ts){
-  if (!Number.isFinite(ts)) return '—';
-  try {
-    return timeFormatter.format(new Date(ts));
-  } catch {
-    return new Date(ts).toLocaleString();
-  }
-}
-
 function populateFilters(list){
   const cats = Array.from(new Set(list.map(x => x.category).filter(Boolean))).sort();
-  const needSet = new Set(list.map(x => x.need).filter(Boolean));
-  const needs = ALLOWED_NEEDS.filter(name => needSet.has(name));
+  const needs = Array.from(new Set(list.map(x => x.need).filter(Boolean))).sort();
 
   fillSelect(els.categoryFilter, cats);
   fillSelect(els.needFilter, needs);

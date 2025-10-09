@@ -30,44 +30,26 @@ Settings → Pages → Build from `main` branch (`/root`). Visit the Pages URL w
 - When it’s open, use filters, pick buttons, or press Escape/Close to tuck it away again.
 - Counts stay visible near the button so you always know how many ideas you have loaded.
 
-### 5) Track what you’ve done
-- Open the idea library to see a “Recent history” column with timestamps for everything marked **Done**
-  or **Skipped** on this device.
-- Drawing a card logs it as “Drawn.” When you press **Mark Done** the entry flips to “Done” with the
-  completion time. Use **Skip** to mark the current card as skipped before pulling another.
-- Picking directly from the library works too—mark it done or skipped to add a timestamped entry.
-
-### 6) Non-repeating logic
+### 5) Non-repeating logic
 - Two knobs: “Avoid repeats for at least (days)” **and** “Also avoid last N picks”.
 - The app prioritizes items not seen in either window. If everything has been seen recently,
   it will surface the least-recent ones next.
 - History lives only on the device (localStorage). Reset via the button or by clearing site data.
 
-### 7) Using a different data source
+### 6) Using a different data source
 - Put a CSV/JSON anywhere (same repo is simplest) and paste its URL into “Data source”.
 - For another repo, use the file’s `raw` URL.
 
-### 8) Keyboard
+### 7) Keyboard
 - `Enter` on “Draw” picks the next idea.
 - Tab between buttons; everything is accessible.
 
-### 9) NVC-friendly tips
-- Use the **need** column with one of Marshall Rosenberg’s NVC needs (the app only surfaces these):
-  `Love/Caring`, `Nurturing`, `Connection`, `Belonging`, `Support`, `Consideration`,
-  `Need for all living things to flourish`, `Inclusion`, `Community`, `Safety`, `Contribution`,
-  `Peer Respect`, `Respect`, `Autonomy`, `To be seen`, `Acknowledgement`, `Appreciation`, `Trust`,
-  `Dependability`, `Honesty`, `Honor`, `Commitment`, `Clarity`, `Accountability`, `Causality`,
-  `Fairness`, `Justice`, `Choice`, `Freedom`, `Reliability`, `Act Freely`, `Choose Freely`,
-  `Understanding`, `Recognition`, `Non-judgmental Communication`, `Need to matter`, `Friendship`,
-  `Space`, `Peace`, `Serenity`, `Do things at my own pace and in my own way`, `Calm`, `Participation`,
-  `To be heard`, `Equality`, `Empowerment`, `Consistency`, `Genuineness`, `Mattering`, `Rest`,
-  `Mutuality`, `Relaxation`, `Closeness`, `Authenticity`, `Self expression`, `Integrity`, `Empathy`,
-  `Privacy`, `Order`, `Beauty`, `Control`, `Predictability`, `Accomplishment`, `Physical Fitness`,
-  `Acceptance`, `Growth`, `Security`.
+### 8) NVC-friendly tips
+- Use the **need** column with values like: play, creativity, closeness, rest, learning, order, clarity.
 - Before drawing, each person can say one need alive right now and set filters accordingly.
 - After a pick, each can say: “one thing I enjoyed” + “one wish for next time.”
 
-### 10) Giraffe hat extras
+### 9) Giraffe hat extras
 - Color-code idea slips by energy (blue = calm, yellow = play, green = order, red = move) to match
   the moment.
 - Give each person two opt-out tokens—trade a draw that doesn’t meet your needs, no explanation
