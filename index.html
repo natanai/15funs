@@ -1,1 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>15funs</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="topbar">
+  <h1>15funs</h1>
+  <p role="note">Screen-free, ~15-minute adventures you can shuffle without repeats.</p>
+</header>
 
+<main class="layout" id="layout">
+  <section class="panel settings" aria-labelledby="settings-title">
+    <h2 id="settings-title">Deck settings</h2>
+
+    <label class="row">
+      <span>Data source</span>
+      <input id="dataUrl" type="url" inputmode="url"
+             value="data/ideas.csv"
+             aria-describedby="data-help">
+      <button id="reloadBtn" class="secondary">Load</button>
+    </label>
+    <p id="data-help" class="hint">
+      Use a relative file in this repo (CSV or JSON), or a raw URL to another repo.
+      <a href="data/ideas.csv">Open the spreadsheet-style CSV</a> to add more ideas.
+    </p>
+
+    <div class="buttons library-toggle">
+      <button id="showLibraryBtn" class="secondary" aria-haspopup="true" aria-expanded="false">
+        View idea library
+      </button>
+      <span id="libraryStatus" class="hint" aria-live="polite"></span>
+    </div>
+
+    <div class="row-grid">
+      <label>
+        <span>Avoid repeats for at least (days)</span>
+        <input id="avoidDays" type="number" min="0" step="1" value="7">
+      </label>
+      <label>
+        <span>Also avoid last N picks</span>
+        <input id="avoidCount" type="number" min="0" step="1" value="10">
+      </label>
+    </div>
+
+    <div class="row-grid">
+      <label>
+        <span>Filter by category (optional)</span>
+        <select id="categoryFilter">
+          <option value="">— any —</option>
+        </select>
+      </label>
+      <label>
+        <span>Filter by need (optional)</span>
+        <select id="needFilter">
+          <option value="">— any —</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="row-grid">
+      <label>
+        <span>Duration (minutes) ≤</span>
+        <input id="maxDuration" type="number" min="1" step="1" value="15">
+      </label>
+      <label class="checkbox">
+        <input id="hideRecentlySeen" type="checkbox" checked>
+        <span>Hide items marked “recent” in the list</span>
+      </label>
+    </div>
+
+    <div class="buttons">
+      <button id="resetBtn" class="danger" aria-describedby="reset-help">Reset history</button>
+      <span id="reset-help" class="hint">Clears local history and deck only on this device.</span>
+    </div>
+
+    <details>
+      <summary>About needs & categories (NVC)</summary>
+      <p>“Needs” are values like play, creativity, rest, closeness, learning. Labeling them helps pick
+      something that tends to everyone’s needs today.</p>
+    </details>
+  </section>
+
+  <section class="panel card" aria-live="polite" aria-atomic="true">
+    <div class="card-body" id="cardBody">
+      <p class="hint">Press “Draw” to pick your next tiny adventure.</p>
+    </div>
+    <div class="buttons">
+      <button id="drawBtn" class="primary">Draw</button>
+      <button id="skipBtn" class="secondary" disabled>Skip</button>
+      <button id="undoBtn" class="secondary" disabled>Undo</button>
+      <button id="doneBtn" class="success" disabled>Mark Done</button>
+    </div>
+  </section>
+
+  <section class="panel list" id="libraryPanel" aria-labelledby="list-title" hidden tabindex="-1">
+    <div class="library-head">
+      <div>
+        <h2 id="list-title">Idea library</h2>
+        <div id="counts" class="hint"></div>
+      </div>
+      <button id="hideLibraryBtn" class="secondary" aria-label="Close idea library">Close</button>
+    </div>
+    <div class="library-columns">
+      <section class="library-ideas" aria-label="Ideas that match your filters">
+        <h3 class="library-subhead">Ideas</h3>
+        <ul id="ideasList" class="ideas"></ul>
+      </section>
+      <section class="library-history" aria-labelledby="history-title">
+        <h3 id="history-title" class="library-subhead">Recent history</h3>
+        <ol id="historyList" class="history-list"></ol>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <small>
+    Data persists locally via <code>localStorage</code>. To start fresh, use “Reset history” or clear site data.
+    • Built for two humans tending to everyone’s needs 🦒
+  </small>
+</footer>
+
+<script src="app.js" type="module"></script>
+</body>
+</html>
