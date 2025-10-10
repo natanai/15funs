@@ -54,11 +54,11 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .timer-btn{padding:8px 14px;font-size:.9rem}
 .timer.is-finished{border-color:var(--accent-2);box-shadow:0 0 0 2px color-mix(in oklab, var(--accent-2), transparent 70%)}
 .timer.is-finished .timer-display{color:var(--accent-2)}
-.charades{margin-top:10px;padding:14px;border-radius:12px;border:1px dashed #00000025;background:#ffffff08;display:grid;gap:10px;text-align:left}
-.charades-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.charades .label{font-size:.85rem;color:var(--muted)}
-.charades-status{margin:0;font-size:.85rem;color:var(--muted)}
-.charades-prompt{margin:0;font-size:1.05rem;font-weight:500;line-height:1.4}
+.charades,.question-pool{margin-top:10px;padding:14px;border-radius:12px;border:1px dashed #00000025;background:#ffffff08;display:grid;gap:10px;text-align:left}
+.charades-head,.question-pool-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.charades .label,.question-pool .label{font-size:.85rem;color:var(--muted)}
+.charades-status,.question-status{margin:0;font-size:.85rem;color:var(--muted)}
+.charades-prompt,.question-prompt{margin:0;font-size:1.05rem;font-weight:500;line-height:1.4}
 @keyframes cardPop{0%{opacity:0;transform:translateY(18px) scale(.94)}60%{transform:translateY(-8px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes lidLift{0%{opacity:1;transform:translateY(0)}55%{opacity:1}100%{opacity:0;transform:translateY(-105%)}}
 .ideas{list-style:none;padding:0;margin:0;display:grid;gap:8px}
