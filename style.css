@@ -77,6 +77,11 @@ button:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:0 4px 0 
 .card-body.is-revealing .card-content{animation:cardPop .48s cubic-bezier(.22,1.22,.36,1) forwards .08s}
 .badge{display:inline-block;padding:5px 10px;background:color-mix(in srgb, var(--card), #fff 40%);border-radius:999px;border:1px dashed #d7c8a2;margin:0 4px;font-weight:600}
 .meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;color:var(--muted);font-family:"Nunito",sans-serif}
+.meta-primary{margin-top:4px}
+.meta-details{margin-top:14px}
+.meta-toggle{font-size:.85rem;padding:6px 12px;border-radius:999px;border:1px dashed #d7c8a2;background:color-mix(in srgb, var(--card), #fff 45%);color:var(--muted);box-shadow:none;margin-top:6px}
+.meta-toggle:active{transform:none}
+.meta-toggle[aria-expanded="true"]{background:color-mix(in srgb, var(--card), #fff 25%)}
 .title{font-size:clamp(20px,2.6vw,30px);font-family:"Kalam",cursive;font-weight:700}
 .desc{max-width:62ch;margin-inline:auto;font-size:1rem}
 .card-body.has-idea .title{margin-top:6px}
