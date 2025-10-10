@@ -1,57 +1,64 @@
-title,desc,category,need,duration,energy
-Blind-contour portraits,Draw each other without looking at the page.,creativity,To be seen,15,calm
-100-word micro-story,Write exactly 100 words about today.,creativity,Self expression,15,calm
-Four-panel comic,Sketch today in four frames.,creativity,Self expression,15,medium
-Blackout poetry,Use an old flyer or mailer to reveal a poem.,creativity,Beauty,15,calm
-Collage from junk mail,Cut and tape scraps into a tiny scene or creature.,creativity,Self expression,15,playful
-Paint with coffee or tea,Brew a little and paint washes or lettering.,creativity,Beauty,15,calm
-Tonight poem,Write a 10-line poem where each line starts with ‘Tonight…’.,creativity,Self expression,12,calm
-Origami crane or box,"Fold paper into a crane or lidded box, then gift it.",creativity,Contribution,12,calm
-Doodle swap,One person starts a doodle; the other finishes it.,creativity,Mutuality,10,playful
-Tiny recyclables build,"Create a mini robot, vehicle, or creature from scraps.",creativity,Self expression,15,playful
-Charades,"Act animals, jobs, or household objects.",play,Participation,15,lively
-20 questions with a maybe,Yes/No only—with one ‘maybe’ allowed.,play,Understanding,12,calm
-Household pictionary,Grab random objects to inspire quick sketches.,play,Participation,15,lively
-Two-truths-and-a-wish,Swap a lie for a wish you have.,play,Honesty,10,warm
-Story baton,Tell a story together one sentence at a time.,play,Mutuality,10,playful
-Blanket-fort speed build,"Construct a cozy fort, then sit inside for two minutes.",play,Act Freely,15,lively
-Scavenger hunt,Find 5 blue things or 3 circles around the room.,play,Participation,12,playful
-Appreciation sprint,"Each write five specific appreciations, then read aloud.",connection,Appreciation,12,warm
-Back-to-back drawing,One describes shapes; the other draws without peeking.,connection,Clarity,12,medium
-"Rose, bud, thorn","Share one highlight, one budding thing, and one tough moment.",connection,To be heard,10,warm
-Massage swap,"Check consent, then trade hand or shoulder massages.",connection,Nurturing,10,calm
-Seven-minute question trade,Ask anything from a question jar for seven minutes.,connection,Empathy,14,calm
-Wish & appreciate exchange,Each share one wish and one appreciation before swapping.,connection,Acknowledgement,10,warm
-Stretch follow-the-leader,"Mirror gentle stretches led by one person, then swap.",movement,Mutuality,10,calm
-Hallway bowling,Use bottles as pins and rolled socks as the ball.,movement,Act Freely,12,lively
-Living-room dance party,Make your own rhythm—no music required.,movement,Freedom,10,lively
-Plank and pun duel,Hold a plank while your partner tells groan-worthy puns.,movement,Physical Fitness,8,lively
-Balance trail,Lay a tape or scarf tightrope and take turns walking it.,movement,Physical Fitness,10,medium
-Tidy-dance sprint,Move objects back home while swaying to a silent beat.,movement,Order,12,playful
-Tea ceremony,"Brew, pour slowly, and describe the flavors you notice.",calm,Serenity,12,calm
-5-4-3-2-1 grounding,"Notice 5 sights, 4 touches, 3 sounds, 2 smells, 1 taste.",calm,Calm,8,calm
-Body scan with self-massage,"Gently massage temples, jaw, hands, and feet while scanning.",calm,Relaxation,12,calm
-Rearrange a surface,Style one shelf or tabletop to feel pleasing.,calm,Beauty,12,calm
-Draw your breathing,Sketch a wavy line that rises on inhales and falls on exhales.,calm,Calm,10,calm
-Home words candle ritual,Light a candle and write 10 words that feel like home.,calm,Mattering,10,warm
-Teach a tiny skill,"Demo a knot, card shuffle, or another micro-skill.",learning,Contribution,12,calm
-Learn 5 ASL words,Look them up later—practice the motions now.,learning,Growth,12,calm
-Read one poem aloud,Underline one line and share why it stands out.,learning,Connection,10,calm
-Map your home from memory,"Sketch a top-down map, then compare versions.",learning,Understanding,12,playful
-Mini floor-plan rethink,Sketch a room and plan one small move.,learning,Order,12,calm
-Question storm,List 10 things you’re curious to look up later.,learning,Understanding,10,playful
-Clear one drawer,Tidy just one drawer or shelf.,order,Order,12,calm
-Label the cable tangle,Make three labels from tape or paper and tag cords.,order,Clarity,8,calm
-Water-and-prune round,Water plants and remove one tired leaf per plant.,order,Need for all living things to flourish,12,calm
-Five-item donate pile,Gather five things to donate right now.,order,Contribution,12,medium
-Mend or shine one thing,"Sew a button, tidy a seam, or polish a mirror.",order,Integrity,12,calm
-House micro-wins list,List quick wins for the house and check one off immediately.,order,Accomplishment,10,playful
-Spice blending lab,"Open three spices, mix a pinch, and name the blend.",senses,Self expression,10,playful
-Blindfold taste test,Try three safe foods and describe textures before guessing.,senses,Understanding,10,playful
-Ice-cube experiment,"Hold an ice cube for 10 seconds, then journal sensations.",senses,Understanding,8,calm
-Indoor smell walk,Find five distinct smells and rank them comforting to zesty.,senses,Understanding,10,playful
-3×3 gratitude,"Name 3 things about me, 3 about you, and 3 about our space.",reflection,Appreciation,10,warm
-Needs check-in,"Each name two needs alive right now, then choose a fitting idea.",reflection,Clarity,8,calm
-Love note hideaway,Write a love note and hide it at eye level for later.,reflection,Love/Caring,10,warm
-Weather report doodles,Draw today as weather icons and compare forecasts.,reflection,Self expression,12,playful
-One small promise,Write a promise for tomorrow and take a 30-second first step now.,reflection,Commitment,10,calm
+title,desc,category,need,duration,energy,link,link_label
+Blind-contour portraits,Draw each other without looking at the page.,creativity,To be seen,15,calm,,
+100-word micro-story,Write exactly 100 words about today.,creativity,Self expression,15,calm,,
+Four-panel comic,Sketch today in four frames.,creativity,Self expression,15,medium,,
+Blackout poetry,Use an old flyer or mailer to reveal a poem.,creativity,Beauty,15,calm,,
+Collage from junk mail,Cut and tape scraps into a tiny scene or creature.,creativity,Self expression,15,playful,,
+Paint with coffee or tea,Brew a little and paint washes or lettering.,creativity,Beauty,15,calm,,
+Tonight poem,Write a 10-line poem where each line starts with ‘Tonight…’.,creativity,Self expression,12,calm,,
+Origami crane or box,"Fold paper into a crane or lidded box, then gift it.",creativity,Contribution,12,calm,,
+Doodle swap,One person starts a doodle; the other finishes it.,creativity,Mutuality,10,playful,,
+Tiny recyclables build,"Create a mini robot, vehicle, or creature from scraps.",creativity,Self expression,15,playful,,
+Charades,"Use the Charades prompt button below to draw a surprise idea and act it out silently.",play,Participation,15,lively,,
+20 questions with a maybe,Yes/No only—with one ‘maybe’ allowed.,play,Understanding,12,calm,,
+Household pictionary,Grab random objects to inspire quick sketches.,play,Participation,15,lively,,
+Two-truths-and-a-wish,Swap a lie for a wish you have.,play,Honesty,10,warm,,
+Story baton,Tell a story together one sentence at a time.,play,Mutuality,10,playful,,
+Blanket-fort speed build,"Construct a cozy fort, then sit inside for two minutes.",play,Act Freely,15,lively,,
+Scavenger hunt,Find 5 blue things or 3 circles around the room.,play,Participation,12,playful,,
+Appreciation sprint,"Each write five specific appreciations, then read aloud.",connection,Appreciation,12,warm,,
+Back-to-back drawing,One describes shapes; the other draws without peeking.,connection,Clarity,12,medium,,
+"Rose, bud, thorn","Share one highlight, one budding thing, and one tough moment.",connection,To be heard,10,warm,,
+Massage swap,"Check consent, then trade hand or shoulder massages.",connection,Nurturing,10,calm,,
+"Seven-minute question trade","Set a seven-minute timer. Person A asks:
+• What's something new you noticed today?
+• Which tiny risk are you excited to try soon?
+• When did you feel most connected this week?
+Person B asks:
+• Which small comfort is calling you right now?
+• What's a question you'd love me to ask more often?
+• What felt surprisingly fun today?
+Switch who asks first next round.",connection,Empathy,14,calm,,
+Wish & appreciate exchange,Each share one wish and one appreciation before swapping.,connection,Acknowledgement,10,warm,,
+Stretch follow-the-leader,"Mirror gentle stretches led by one person, then swap.",movement,Mutuality,10,calm,,
+Hallway bowling,Use bottles as pins and rolled socks as the ball.,movement,Act Freely,12,lively,,
+Living-room dance party,Make your own rhythm—no music required.,movement,Freedom,10,lively,,
+Plank and pun duel,Hold a plank while your partner tells groan-worthy puns.,movement,Physical Fitness,8,lively,https://wstyler.ucsd.edu/puns/,Browse pun list
+Balance trail,Lay a tape or scarf tightrope and take turns walking it.,movement,Physical Fitness,10,medium,,
+Tidy-dance sprint,Move objects back home while swaying to a silent beat.,movement,Order,12,playful,,
+Tea ceremony,"Brew, pour slowly, and describe the flavors you notice.",calm,Serenity,12,calm,,
+5-4-3-2-1 grounding,"Notice 5 sights, 4 touches, 3 sounds, 2 smells, 1 taste.",calm,Calm,8,calm,,
+Body scan with self-massage,"Gently massage temples, jaw, hands, and feet while scanning.",calm,Relaxation,12,calm,,
+Rearrange a surface,Style one shelf or tabletop to feel pleasing.,calm,Beauty,12,calm,,
+Draw your breathing,Sketch a wavy line that rises on inhales and falls on exhales.,calm,Calm,10,calm,,
+Home words candle ritual,Light a candle and write 10 words that feel like home.,calm,Mattering,10,warm,,
+Teach a tiny skill,"Demo a knot, card shuffle, or another micro-skill.",learning,Contribution,12,calm,,
+Learn 5 ASL words,Look them up later—practice the motions now.,learning,Growth,12,calm,,
+Read one poem aloud,Underline one line and share why it stands out.,learning,Connection,10,calm,,
+Map your home from memory,"Sketch a top-down map, then compare versions.",learning,Understanding,12,playful,,
+Mini floor-plan rethink,Sketch a room and plan one small move.,learning,Order,12,calm,,
+Question storm,List 10 things you’re curious to look up later.,learning,Understanding,10,playful,,
+Label the cable tangle,Make three labels from tape or paper and tag cords.,order,Clarity,8,calm,,
+Water-and-prune round,Water plants and remove one tired leaf per plant.,order,Need for all living things to flourish,12,calm,,
+Five-item donate pile,Gather five things to donate right now.,order,Contribution,12,medium,,
+Mend or shine one thing,"Sew a button, tidy a seam, or polish a mirror.",order,Integrity,12,calm,,
+House micro-wins list,List quick wins for the house and check one off immediately.,order,Accomplishment,10,playful,,
+Spice blending lab,"Open three spices, mix a pinch, and name the blend.",senses,Self expression,10,playful,,
+Blindfold taste test,Try three safe foods and describe textures before guessing.,senses,Understanding,10,playful,,
+Ice-cube experiment,"Hold an ice cube for 10 seconds, then journal sensations.",senses,Understanding,8,calm,,
+Indoor smell walk,"Each person gathers five distinct smells and lines them up from comforting to zesty. Trade trays, explore each other's picks, then rearrange them to show how you'd order your partner's selection.",senses,Understanding,10,playful,,
+3×3 gratitude,"Name 3 things about me, 3 about you, and 3 about our space.",reflection,Appreciation,10,warm,,
+Needs check-in,"Each name two needs alive right now, then choose a fitting idea.",reflection,Clarity,8,calm,,
+Love note hideaway,Write a love note and hide it at eye level for later.,reflection,Love/Caring,10,warm,,
+Weather report doodles,Draw today as weather icons and compare forecasts.,reflection,Self expression,12,playful,,
+One small promise,Write a promise for tomorrow and take a 30-second first step now.,reflection,Commitment,10,calm,,

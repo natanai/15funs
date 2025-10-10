@@ -34,11 +34,33 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .library-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}
 .library-head h2{margin:0}
 .card{position:sticky;top:84px}
-.card-body{min-height:160px;display:grid;place-content:center;gap:10px;text-align:center;padding:10px}
+.card-body{min-height:160px;display:grid;place-content:center;gap:10px;text-align:center;padding:10px;position:relative;overflow:hidden}
+.card-body.has-idea{padding:22px 18px}
+.card-body::before{content:"";position:absolute;inset:0;background:color-mix(in oklab, var(--bg), #000 12%);border-radius:inherit;box-shadow:inset 0 8px 22px #00000025;opacity:0;transform:translateY(0);pointer-events:none}
+.card-body .card-content{display:grid;gap:12px;justify-items:center;opacity:0;transform:translateY(14px) scale(.96)}
+.card-body.is-revealing::before{animation:lidLift .5s ease-out forwards}
+.card-body.is-revealing .card-content{animation:cardPop .48s cubic-bezier(.22,1.22,.36,1) forwards .08s}
 .badge{display:inline-block;padding:4px 8px;background:#00000014;border-radius:999px;border:1px solid #00000018;margin:0 4px}
 .meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;color:var(--muted)}
 .title{font-size:clamp(18px,2.2vw,26px);font-weight:700}
 .desc{max-width:62ch;margin-inline:auto}
+.card-body.has-idea .title{margin-top:6px}
+.card-body.has-idea .meta{margin-top:4px}
+.timer{margin-top:6px;padding:12px 16px;border-radius:12px;background:#ffffff0f;border:1px solid #00000018;display:grid;gap:10px;justify-items:center}
+.timer-head{display:flex;gap:12px;align-items:baseline}
+.timer-head .label{font-size:.85rem;color:var(--muted)}
+.timer-display{font-size:clamp(26px,3vw,34px);font-variant-numeric:tabular-nums;font-weight:600}
+.timer-controls{display:flex;gap:10px}
+.timer-btn{padding:8px 14px;font-size:.9rem}
+.timer.is-finished{border-color:var(--accent-2);box-shadow:0 0 0 2px color-mix(in oklab, var(--accent-2), transparent 70%)}
+.timer.is-finished .timer-display{color:var(--accent-2)}
+.charades{margin-top:10px;padding:14px;border-radius:12px;border:1px dashed #00000025;background:#ffffff08;display:grid;gap:10px;text-align:left}
+.charades-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.charades .label{font-size:.85rem;color:var(--muted)}
+.charades-status{margin:0;font-size:.85rem;color:var(--muted)}
+.charades-prompt{margin:0;font-size:1.05rem;font-weight:500;line-height:1.4}
+@keyframes cardPop{0%{opacity:0;transform:translateY(18px) scale(.94)}60%{transform:translateY(-8px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes lidLift{0%{opacity:1;transform:translateY(0)}55%{opacity:1}100%{opacity:0;transform:translateY(-105%)}}
 .ideas{list-style:none;padding:0;margin:0;display:grid;gap:8px}
 .ideas li{padding:10px;border:1px dashed #00000025;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ideas .right{display:flex;gap:6px;align-items:center}
