@@ -23,6 +23,10 @@ const els = {
   showLibraryBtn: document.getElementById('showLibraryBtn'),
   hideLibraryBtn: document.getElementById('hideLibraryBtn'),
   libraryStatus: document.getElementById('libraryStatus'),
+  uploadInput: document.getElementById('uploadInput'),
+  uploadBtn: document.getElementById('uploadBtn'),
+  uploadStatus: document.getElementById('uploadStatus'),
+  useUploadedBtn: document.getElementById('useUploadedBtn'),
 };
 
 const STORAGE_KEY = '15funs.v1.state';
@@ -102,12 +106,13 @@ const CHARADES_SOURCE = 'data/charades.csv';
 const QUESTIONS_SOURCE = 'data/question_prompts.csv';
 const YESNO_SOURCE = 'data/yes_no_questions.csv';
 
-let state = loadState();
+let state = ensureStateDefaults(loadState());
 let dataset = [];          // {id, title, desc, category, needs[], duration, energy}
 let deck = [];             // array of idea ids in draw order (we rebuild as needed)
 let deckPtr = -1;          // points at last shown index
 let current = null;        // current idea object
 let currentWasCommitted = false;
+let currentSource = { type: 'url', label: DEFAULTS.dataUrl };
 
 const timerState = {
   intervalId: null,
@@ -140,7 +145,7 @@ async function init() {
   els.maxDuration.value = state.maxDuration ?? DEFAULTS.maxDuration;
 
   // wire events
-  els.reloadBtn.onclick = reloadData;
+  els.reloadBtn.onclick = () => reloadData({ mode: 'url', showNote: true });
   els.dataUrl.onchange = persistSettings;
   [els.avoidDays, els.avoidCount, els.maxDuration].forEach(el => el.onchange = settingsChanged);
   [els.categoryFilter, els.needFilter, els.hideRecentlySeen].forEach(el => el.onchange = filtersChanged);
@@ -157,6 +162,18 @@ async function init() {
     }
   });
 
+  if (els.uploadBtn && els.uploadInput) {
+    els.uploadBtn.onclick = () => els.uploadInput.click();
+  }
+  if (els.uploadInput) {
+    els.uploadInput.addEventListener('change', handleUploadSelection);
+  }
+  if (els.useUploadedBtn) {
+    els.useUploadedBtn.addEventListener('click', () => reloadData({ mode: 'upload', showNote: true }));
+  }
+
+  updateUploadStatus();
+
   await reloadData();
 }
 
@@ -168,6 +185,17 @@ function loadState() {
   } catch {
     return { history: [], settingsVersion: 1 };
   }
+}
+function ensureStateDefaults(raw) {
+  const obj = raw && typeof raw === 'object' ? raw : { history: [], settingsVersion: 1 };
+  if (!Array.isArray(obj.history)) obj.history = [];
+  if (typeof obj.settingsVersion !== 'number') obj.settingsVersion = 1;
+  obj.dataUrl = obj.dataUrl || DEFAULTS.dataUrl;
+  if (obj.uploadedData && typeof obj.uploadedData !== 'object') {
+    obj.uploadedData = null;
+  }
+  obj.dataMode = obj.dataMode === 'upload' && obj.uploadedData ? 'upload' : 'url';
+  return obj;
 }
 function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
@@ -181,19 +209,117 @@ function persistSettings() {
 function settingsChanged() { persistSettings(); rebuildDeck(); renderList(); }
 function filtersChanged()   { renderList(); }
 
-async function reloadData() {
+async function reloadData({ mode, showNote } = {}) {
   persistSettings();
+  const hasUpload = state.uploadedData && typeof state.uploadedData === 'object';
+  const targetMode = mode ?? (hasUpload && state.dataMode === 'upload' ? 'upload' : 'url');
   try {
-    const ideas = await fetchIdeas(state.dataUrl);
-    dataset = ideas;
-    indexById(dataset);
-    populateFilters(dataset);
-    rebuildDeck(/*resetPtr=*/true);
-    renderList();
-    renderCard(null);
-    enableControls();
+    if (targetMode === 'upload' && hasUpload) {
+      const { name, text, format } = state.uploadedData;
+      const ideas = parseIdeas(text, name, format);
+      state.dataMode = 'upload';
+      state.lastSource = { type: 'upload', label: name || 'Uploaded file' };
+      saveState();
+      applyDataset(ideas, {
+        sourceType: 'upload',
+        sourceLabel: state.lastSource.label,
+        note: showNote ? `Loaded ${ideas.length} ideas from ${state.lastSource.label}.` : undefined,
+      });
+    } else {
+      const url = (state.dataUrl || '').trim() || DEFAULTS.dataUrl;
+      const ideas = await fetchIdeas(url);
+      state.dataMode = 'url';
+      state.lastSource = { type: 'url', label: url };
+      saveState();
+      applyDataset(ideas, {
+        sourceType: 'url',
+        sourceLabel: url,
+        note: showNote ? `Loaded ${ideas.length} ideas from ${url}.` : undefined,
+      });
+    }
   } catch (e) {
     showError(e);
+    updateUploadStatus(`Could not load data: ${String(e.message || e)}`);
+  }
+}
+
+function applyDataset(ideas, { sourceType, sourceLabel, note } = {}) {
+  if (sourceType) {
+    currentSource = { type: sourceType, label: sourceLabel ?? '' };
+  }
+  dataset = ideas;
+  indexById(dataset);
+  populateFilters(dataset);
+  rebuildDeck(/*resetPtr=*/true);
+  renderList();
+  renderCard(null, note);
+  enableControls();
+  updateUploadStatus();
+}
+
+function updateUploadStatus(explicitMessage) {
+  if (!els.uploadStatus) return;
+  const uploadData = state.uploadedData && typeof state.uploadedData === 'object' ? state.uploadedData : null;
+  const usingUpload = state.dataMode === 'upload' && !!uploadData;
+  let message = explicitMessage;
+  if (!message) {
+    if (usingUpload) {
+      message = uploadData?.name
+        ? `Using uploaded file: ${uploadData.name}.`
+        : 'Using uploaded file.';
+    } else if (uploadData) {
+      message = uploadData.name
+        ? `Uploaded file saved locally: ${uploadData.name}.`
+        : 'Uploaded file saved locally.';
+    } else {
+      message = 'Upload a CSV or JSON file from your device to use it here.';
+    }
+  }
+  els.uploadStatus.textContent = message;
+  if (els.useUploadedBtn) {
+    if (uploadData) {
+      els.useUploadedBtn.hidden = false;
+      els.useUploadedBtn.disabled = usingUpload;
+    } else {
+      els.useUploadedBtn.hidden = true;
+    }
+  }
+}
+
+function describeCurrentSource() {
+  if (!currentSource) return '';
+  if (currentSource.type === 'upload') {
+    return currentSource.label ? `From uploaded file: ${currentSource.label}` : 'From uploaded file';
+  }
+  if (currentSource.type === 'url') {
+    return currentSource.label ? `From ${currentSource.label}` : 'From data source';
+  }
+  return '';
+}
+
+async function handleUploadSelection(evt) {
+  const input = evt.currentTarget;
+  const file = input?.files && input.files[0];
+  if (!file) return;
+  try {
+    updateUploadStatus(`Loading ${file.name}…`);
+    const text = await file.text();
+    const format = detectFormat(file.name, text);
+    const ideas = parseIdeas(text, file.name, format);
+    state.uploadedData = { name: file.name, text, format };
+    state.dataMode = 'upload';
+    state.lastSource = { type: 'upload', label: file.name || 'Uploaded file' };
+    saveState();
+    applyDataset(ideas, {
+      sourceType: 'upload',
+      sourceLabel: state.lastSource.label,
+      note: `Loaded ${ideas.length} ideas from ${state.lastSource.label}.`,
+    });
+  } catch (err) {
+    showError(err);
+    updateUploadStatus(`Could not load ${file?.name || 'file'}: ${String(err.message || err)}`);
+  } finally {
+    if (input) input.value = '';
   }
 }
 
@@ -206,14 +332,44 @@ async function fetchIdeas(url) {
   const res = await fetch(url + (url.includes('?') ? '&' : '?') + '_ts=' + Date.now());
   if (!res.ok) throw new Error(`Fetch failed (${res.status}) for ${url}`);
   const text = await res.text();
-  const lowered = url.toLowerCase();
-  if (lowered.endsWith('.json')) {
-    const arr = JSON.parse(text);
+  const format = detectFormat(url, text);
+  return parseIdeas(text, url, format);
+}
+
+function detectFormat(nameHint, text) {
+  const lowered = String(nameHint || '').toLowerCase();
+  if (lowered.endsWith('.json')) return 'json';
+  if (lowered.endsWith('.csv')) return 'csv';
+  const trimmed = String(text || '').trim();
+  if (!trimmed) return 'csv';
+  const firstChar = trimmed[0];
+  if (firstChar === '{' || firstChar === '[') return 'json';
+  return 'csv';
+}
+
+function parseIdeas(text, hint, format) {
+  const mode = format || detectFormat(hint, text);
+  if (mode === 'json') {
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      throw new Error(`Invalid JSON data${hint ? ` in ${hint}` : ''}: ${err.message || err}`);
+    }
+    const arr = Array.isArray(parsed)
+      ? parsed
+      : (parsed && typeof parsed === 'object' && Array.isArray(parsed.ideas))
+        ? parsed.ideas
+        : (parsed && typeof parsed === 'object' && Array.isArray(parsed.data))
+          ? parsed.data
+          : null;
+    if (!arr) {
+      throw new Error('JSON data must be an array or contain an "ideas" array.');
+    }
     return normalize(arr);
-  } else {
-    const rows = parseCSV(text);
-    return normalize(csvRowsToObjects(rows));
   }
+  const rows = parseCSV(text);
+  return normalize(csvRowsToObjects(rows));
 }
 
 // --- CSV parsing (minimal but handles quoted cells & commas) ---
@@ -862,7 +1018,9 @@ function renderList(){
   const statusText = `${list.length} visible • ${dataset.length} total • ${getHistory().length} picks in history`;
   els.counts.textContent = statusText;
   if (els.libraryStatus) {
-    els.libraryStatus.textContent = `${dataset.length} ideas loaded (${list.length} matching filters)`;
+    const base = `${dataset.length} ideas loaded (${list.length} matching filters)`;
+    const sourceInfo = describeCurrentSource();
+    els.libraryStatus.textContent = sourceInfo ? `${base} • ${sourceInfo}` : base;
   }
 
   const frag = document.createDocumentFragment();

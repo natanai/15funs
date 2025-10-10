@@ -199,6 +199,14 @@ input[type="checkbox"] {
   margin-top: 16px;
 }
 
+.upload-actions {
+  margin-top: 8px;
+}
+
+.upload-actions button {
+  flex: none;
+}
+
 .library-toggle {
   align-items: center;
   gap: 12px;
