@@ -34,6 +34,7 @@ let dataset = [];          // {id, title, desc, category, need, duration, energy
 let deck = [];             // array of idea ids in draw order (we rebuild as needed)
 let deckPtr = -1;          // points at last shown index
 let current = null;        // current idea object
+let currentWasCommitted = false;
 
 init().catch(err => showError(err));
 
@@ -255,17 +256,20 @@ function draw({commit}){
   const idea = deck[nextIdx];
   if (!idea) { renderCard(null, 'No ideas match your filters.'); return; }
 
+  current = idea;
+  currentWasCommitted = commit;
+  deckPtr = nextIdx;
+
   renderCard(idea);
   els.skipBtn.disabled = false;
   els.doneBtn.disabled = false;
-  els.undoBtn.disabled = getHistory().length === 0;
 
   if (commit){
-    deckPtr = nextIdx;
-    current = idea;
     pushHistory(idea.id);
     renderList(); // refresh recent badges
   }
+
+  els.undoBtn.disabled = getHistory().length === 0;
 }
 
 function undoLast(){
@@ -274,8 +278,8 @@ function undoLast(){
   const last = h.pop();
   saveState();
   // Move pointer one back if it matches
-  if (current && last.id === current.id && deckPtr > -1) {
-    deckPtr--;
+  if (current && currentWasCommitted && last.id === current.id && deckPtr > -1) {
+    deckPtr = Math.max(deckPtr - 1, -1);
   }
   renderList();
   els.undoBtn.disabled = getHistory().length === 0;
@@ -283,7 +287,14 @@ function undoLast(){
 }
 
 function markDone(){
-  // “Done” is the same as committing the current pick; draw the next one immediately.
+  const h = getHistory();
+  const last = h[h.length - 1];
+  if (current && (!last || last.id !== current.id)) {
+    pushHistory(current.id);
+    currentWasCommitted = true;
+    renderList();
+  }
+  // “Done” commits the current idea (if needed) and draws the next one immediately.
   draw({commit:true});
 }
 
@@ -298,7 +309,11 @@ function resetHistory(){
 
 function renderCard(idea, note){
   if (!idea){
+    current = null;
+    currentWasCommitted = false;
     els.cardBody.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
+    els.skipBtn.disabled = true;
+    els.doneBtn.disabled = true;
     return;
   }
   const tags = [];
@@ -343,7 +358,17 @@ function renderList(){
     }
     const go = document.createElement('button');
     go.textContent = 'Pick';
-    go.onclick = () => { renderCard(item); current = item; };
+    go.onclick = () => {
+      renderCard(item);
+      current = item;
+      const h = getHistory();
+      const last = h[h.length - 1];
+      currentWasCommitted = !!(last && last.id === item.id);
+      const idx = deck.findIndex(d => d.id === item.id);
+      deckPtr = idx !== -1 ? idx : -1;
+      els.skipBtn.disabled = false;
+      els.doneBtn.disabled = false;
+    };
     right.appendChild(go);
     li.appendChild(left); li.appendChild(right);
     if (!(hideRecent && isRecent)) frag.appendChild(li);
