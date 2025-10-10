@@ -95,6 +95,10 @@ body::before {
   .layout.with-library {
     grid-template-columns: 1fr;
   }
+
+  .panel.card {
+    order: -1;
+  }
 }
 
 .panel {
@@ -535,7 +539,16 @@ button:disabled {
 }
 
 .panel.list {
-  overflow: hidden;
+  overflow: visible;
+}
+
+.panel.list::after {
+  z-index: 0;
+}
+
+.panel.list > * {
+  position: relative;
+  z-index: 1;
 }
 
 .ideas li {
