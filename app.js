@@ -879,13 +879,24 @@ function renderList(){
   list.forEach(item => {
     const li = document.createElement('li');
     const left = document.createElement('div');
-    const needTags = Array.isArray(item.needs)
-      ? item.needs.map(n => ` <span class="tag">· ${escapeHtml(n)}</span>`).join('')
-      : '';
-    left.innerHTML = `<strong>${escapeHtml(item.title)}</strong>
-      ${item.category ? ` <span class="tag">· ${escapeHtml(item.category)}</span>`:''}
-      ${needTags}
-      <span class="tag">· ${item.duration}m</span>`;
+    left.className = 'left';
+
+    const title = document.createElement('strong');
+    title.textContent = item.title;
+    left.appendChild(title);
+
+    if (item.category) {
+      left.appendChild(createTag(item.category));
+    }
+
+    if (Array.isArray(item.needs)) {
+      item.needs.forEach(need => {
+        left.appendChild(createTag(need));
+      });
+    }
+
+    left.appendChild(createTag(`${item.duration}m`));
+
     const right = document.createElement('div'); right.className='right';
     const isRecent = recent.has(item.id) || lastN.has(item.id);
     if (isRecent) {
@@ -914,6 +925,12 @@ function renderList(){
     if (!(hideRecent && isRecent)) frag.appendChild(li);
   });
   els.ideasList.replaceChildren(frag);
+}
+function createTag(text){
+  const span = document.createElement('span');
+  span.className = 'tag';
+  span.textContent = text;
+  return span;
 }
 function populateFilters(list){
   const cats = Array.from(new Set(list.map(x => x.category).filter(Boolean))).sort();
