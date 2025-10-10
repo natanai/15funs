@@ -440,12 +440,12 @@ function renderCard(idea, note){
     return;
   }
 
-  const tags = [];
-  if (idea.category) tags.push(`<span class="badge">${escapeHtml(idea.category)}</span>`);
+  const durationBadge = `<span class="badge badge-duration">${idea.duration} min</span>`;
+  const detailBadges = [];
+  if (idea.category) detailBadges.push(`<span class="badge">${escapeHtml(idea.category)}</span>`);
   if (Array.isArray(idea.needs)) {
-    idea.needs.forEach(n => tags.push(`<span class="badge">${escapeHtml(n)}</span>`));
+    idea.needs.forEach(n => detailBadges.push(`<span class="badge">${escapeHtml(n)}</span>`));
   }
-  tags.push(`<span class="badge">${idea.duration} min</span>`);
 
   const descHtml = idea.desc ? escapeHtml(idea.desc).replace(/\n/g, '<br>') : '';
   const linkHtml = idea.link
@@ -493,10 +493,16 @@ function renderCard(idea, note){
       <div class="title">${escapeHtml(idea.title)}</div>
       ${descHtml ? `<p class="desc">${descHtml}</p>` : ''}
       ${linkHtml}
-      <div class="meta">${tags.join('')}</div>
+      <div class="meta meta-primary">${durationBadge}</div>
       ${timerHtml}
       ${charadesHtml}
       ${questionHtml}
+      ${detailBadges.length ? `
+        <div class="meta meta-details" data-role="metaDetails" hidden>${detailBadges.join('')}</div>
+        <button type="button" class="meta-toggle" data-role="metaToggle" aria-expanded="false">
+          Show categories &amp; needs
+        </button>
+      ` : ''}
     </div>
   `;
 
@@ -509,6 +515,17 @@ function renderCard(idea, note){
   }
   if (questionConfig) {
     setupQuestionPoolFeature(idea).catch(err => console.error(err));
+  }
+
+  const metaToggle = card.querySelector('[data-role=metaToggle]');
+  if (metaToggle) {
+    const metaDetails = card.querySelector('[data-role=metaDetails]');
+    metaToggle.addEventListener('click', () => {
+      const expanded = metaToggle.getAttribute('aria-expanded') === 'true';
+      metaToggle.setAttribute('aria-expanded', String(!expanded));
+      if (metaDetails) metaDetails.hidden = expanded;
+      metaToggle.textContent = expanded ? 'Show categories & needs' : 'Hide categories & needs';
+    });
   }
 }
 
@@ -888,6 +905,9 @@ function renderList(){
       const idx = deck.findIndex(d => d.id === item.id);
       deckPtr = idx !== -1 ? idx : -1;
       els.doneBtn.disabled = false;
+      if (!els.libraryPanel.hidden) {
+        hideLibrary();
+      }
     };
     right.appendChild(go);
     li.appendChild(left); li.appendChild(right);
