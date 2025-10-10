@@ -28,6 +28,7 @@ const els = {
 const STORAGE_KEY = '15funs.v1.state';
 const DEFAULTS = { avoidDays: 7, avoidCount: 10, maxDuration: 15, dataUrl: 'data/ideas.csv' };
 const CHARADES_SOURCE = 'data/charades.csv';
+const QUESTIONS_SOURCE = 'data/question_prompts.csv';
 
 let state = loadState();
 let dataset = [];          // {id, title, desc, category, need, duration, energy}
@@ -48,6 +49,10 @@ const timerState = {
 let charadesPrompts = null;
 let charadesQueue = [];
 let charadesLoading = null;
+
+let questionPrompts = null;
+let questionQueue = [];
+let questionLoading = null;
 
 init().catch(err => showError(err));
 
@@ -362,6 +367,18 @@ function renderCard(idea, note){
       </div>`
     : '';
 
+  const questionHtml = isQuestionIdea(idea)
+    ? `
+      <div class="question-pool" data-role="questionPool">
+        <div class="question-pool-head">
+          <span class="label">Conversation spark</span>
+          <button type="button" class="timer-btn" data-role="questionNext">New question</button>
+        </div>
+        <p class="question-status" data-role="questionStatus">Loading questions…</p>
+        <p class="question-prompt" data-role="questionPrompt"></p>
+      </div>`
+    : '';
+
   card.innerHTML = `
     <div class="card-content">
       <div class="title">${escapeHtml(idea.title)}</div>
@@ -370,6 +387,7 @@ function renderCard(idea, note){
       <div class="meta">${tags.join('')}</div>
       ${timerHtml}
       ${charadesHtml}
+      ${questionHtml}
     </div>
   `;
 
@@ -379,6 +397,9 @@ function renderCard(idea, note){
   setupTimer(idea.duration);
   if (isCharadesIdea(idea)) {
     setupCharadesFeature().catch(err => console.error(err));
+  }
+  if (isQuestionIdea(idea)) {
+    setupQuestionPoolFeature().catch(err => console.error(err));
   }
 }
 
@@ -513,6 +534,15 @@ function isCharadesIdea(idea){
   return !!idea && eqi(idea.title, 'Charades');
 }
 
+function isQuestionIdea(idea){
+  if (!idea) return false;
+  const titles = [
+    '20 questions with a maybe',
+    'Seven-minute question trade',
+  ];
+  return titles.some(title => eqi(idea.title, title));
+}
+
 async function setupCharadesFeature(){
   const wrap = els.cardBody.querySelector('[data-role=charades]');
   if (!wrap) return;
@@ -576,6 +606,71 @@ function drawCharadesPrompt(){
     charadesQueue = shuffle(charadesPrompts.slice());
   }
   return charadesQueue.pop();
+}
+
+async function setupQuestionPoolFeature(){
+  const wrap = els.cardBody.querySelector('[data-role=questionPool]');
+  if (!wrap) return;
+  const statusEl = wrap.querySelector('[data-role=questionStatus]');
+  const promptEl = wrap.querySelector('[data-role=questionPrompt]');
+  const button = wrap.querySelector('[data-role=questionNext]');
+  if (!statusEl || !promptEl || !button) return;
+
+  button.disabled = true;
+  statusEl.textContent = 'Loading questions…';
+  try {
+    const prompts = await loadQuestionPrompts();
+    if (!wrap.isConnected) return;
+    if (!prompts.length) {
+      statusEl.textContent = 'No questions available yet.';
+      button.disabled = true;
+      return;
+    }
+    statusEl.textContent = '';
+    promptEl.textContent = '';
+    const showNext = () => {
+      const prompt = drawQuestionPrompt();
+      promptEl.textContent = prompt;
+    };
+    button.disabled = false;
+    button.addEventListener('click', showNext);
+    showNext();
+  } catch (err) {
+    if (!wrap.isConnected) return;
+    statusEl.textContent = 'Could not load questions.';
+    button.disabled = true;
+    throw err;
+  }
+}
+
+async function loadQuestionPrompts(){
+  if (questionPrompts) return questionPrompts;
+  if (!questionLoading) {
+    questionLoading = fetch(`${QUESTIONS_SOURCE}?_ts=${Date.now()}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Fetch failed (${res.status}) for ${QUESTIONS_SOURCE}`);
+        return res.text();
+      })
+      .then(text => {
+        const rows = parseCSV(text);
+        if (!rows.length) return [];
+        const header = rows[0].map(h => h.trim().toLowerCase());
+        const idx = header.indexOf('prompt') >= 0 ? header.indexOf('prompt') : 0;
+        return rows.slice(1)
+          .map(r => (r[idx] ?? '').trim())
+          .filter(Boolean);
+      });
+  }
+  questionPrompts = await questionLoading;
+  return questionPrompts;
+}
+
+function drawQuestionPrompt(){
+  if (!questionPrompts || !questionPrompts.length) return '';
+  if (!questionQueue.length) {
+    questionQueue = shuffle(questionPrompts.slice());
+  }
+  return questionQueue.pop();
 }
 
 function escapeAttr(s){
