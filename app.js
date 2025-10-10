@@ -14,7 +14,7 @@ const els = {
   hideRecentlySeen: document.getElementById('hideRecentlySeen'),
   resetBtn: document.getElementById('resetBtn'),
   drawBtn: document.getElementById('drawBtn'),
-  undoBtn: document.getElementById('undoBtn'),
+  clearBtn: document.getElementById('clearBtn'),
   doneBtn: document.getElementById('doneBtn'),
   cardBody: document.getElementById('cardBody'),
   ideasList: document.getElementById('ideasList'),
@@ -146,7 +146,7 @@ async function init() {
   [els.categoryFilter, els.needFilter, els.hideRecentlySeen].forEach(el => el.onchange = filtersChanged);
   els.resetBtn.onclick = resetHistory;
   els.drawBtn.onclick = () => draw();
-  els.undoBtn.onclick = undoLast;
+  els.clearBtn.onclick = clearCurrent;
   els.doneBtn.onclick = markDone;
   els.showLibraryBtn.onclick = showLibrary;
   els.hideLibraryBtn.onclick = hideLibrary;
@@ -387,22 +387,11 @@ function draw(){
   deckPtr = nextIdx;
 
   renderCard(idea);
-
-  els.undoBtn.disabled = getHistory().length === 0;
 }
 
-function undoLast(){
-  const h = getHistory();
-  if (!h.length) return;
-  const last = h.pop();
-  saveState();
-  // Move pointer one back if it matches
-  if (current && currentWasCommitted && last.id === current.id && deckPtr > -1) {
-    deckPtr = Math.max(deckPtr - 1, -1);
-  }
-  renderList();
-  els.undoBtn.disabled = getHistory().length === 0;
-  renderCard(null, 'Undid last pick.');
+function clearCurrent(){
+  if (!current) return;
+  renderCard(null, 'Cleared current idea.');
 }
 
 function markDone(){
@@ -414,7 +403,6 @@ function markDone(){
     renderList();
   }
   renderCard(null, 'Nice! Press “Draw” when you’re ready for another.');
-  els.undoBtn.disabled = getHistory().length === 0;
 }
 
 function resetHistory(){
@@ -437,6 +425,7 @@ function renderCard(idea, note){
     currentWasCommitted = false;
     card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
     els.doneBtn.disabled = true;
+    if (els.clearBtn) els.clearBtn.disabled = true;
     return;
   }
 
@@ -507,6 +496,7 @@ function renderCard(idea, note){
   `;
 
   els.doneBtn.disabled = false;
+  if (els.clearBtn) els.clearBtn.disabled = false;
   void card.offsetWidth;
   requestAnimationFrame(() => card.classList.add('is-revealing'));
   setupTimer(idea.duration);
@@ -947,8 +937,8 @@ function fillSelect(sel, values){
 }
 
 function enableControls(){
-  [els.drawBtn, els.undoBtn, els.doneBtn].forEach(btn => btn.disabled = false);
-  els.undoBtn.disabled = getHistory().length === 0;
+  [els.drawBtn, els.clearBtn, els.doneBtn].forEach(btn => btn.disabled = false);
+  if (els.clearBtn) els.clearBtn.disabled = true;
   els.doneBtn.disabled = true;
   if (els.showLibraryBtn) els.showLibraryBtn.disabled = false;
 }

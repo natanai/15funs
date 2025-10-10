@@ -534,6 +534,10 @@ button:disabled {
   gap: 16px;
 }
 
+.panel.list {
+  overflow: hidden;
+}
+
 .ideas li {
   padding: 18px;
   border: 4px solid #000;
@@ -547,6 +551,7 @@ button:disabled {
   line-height: 1.45;
   text-shadow: none;
   text-rendering: optimizeLegibility;
+  margin-inline-end: 6px;
 }
 
 .ideas .left {
