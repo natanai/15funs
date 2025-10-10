@@ -25,6 +25,13 @@
   <section class="panel settings" aria-labelledby="settings-title">
     <h2 id="settings-title">Deck settings</h2>
 
+    <div class="buttons library-toggle">
+      <button id="showLibraryBtn" class="secondary" aria-haspopup="true" aria-expanded="false">
+        View idea library
+      </button>
+      <span id="libraryStatus" class="hint" aria-live="polite"></span>
+    </div>
+
     <label class="row">
       <span>Data source</span>
       <input id="dataUrl" type="url" inputmode="url"
@@ -43,13 +50,6 @@
       <button id="useUploadedBtn" type="button" class="secondary" hidden>Use uploaded file</button>
     </div>
     <p id="uploadStatus" class="hint" aria-live="polite"></p>
-
-    <div class="buttons library-toggle">
-      <button id="showLibraryBtn" class="secondary" aria-haspopup="true" aria-expanded="false">
-        View idea library
-      </button>
-      <span id="libraryStatus" class="hint" aria-live="polite"></span>
-    </div>
 
     <div class="row-grid">
       <label>
