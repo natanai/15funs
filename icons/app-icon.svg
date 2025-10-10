@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">15funs notebook icon</title>
+  <desc id="desc">Rounded yellow planner page with the number 15 and a pencil resting in the corner.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fce9a5" />
+      <stop offset="1" stop-color="#e9b95f" />
+    </linearGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="6" cy="6" r="3" fill="#d8a64a" opacity="0.18" />
+    </pattern>
+    <clipPath id="round">
+      <rect x="52" y="52" width="408" height="408" rx="96" ry="96" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect x="52" y="52" width="408" height="408" rx="96" ry="96" fill="url(#bg)" />
+    <rect x="52" y="52" width="408" height="408" fill="url(#dots)" opacity="0.4" />
+    <rect x="52" y="52" width="408" height="90" fill="#fdeab5" opacity="0.65" />
+    <rect x="52" y="370" width="408" height="90" fill="#de9d4a" opacity="0.15" />
+  </g>
+
+  <rect x="52" y="52" width="408" height="408" rx="96" ry="96" fill="none" stroke="#d29a4a" stroke-width="12" />
+
+  <g fill="#d19a4c">
+    <circle cx="132" cy="124" r="18" />
+    <circle cx="192" cy="124" r="18" />
+  </g>
+
+  <g fill="#fff">
+    <path d="M188 182c-18 0-32 6-44 18l24 28c7-7 13-10 20-10 8 0 12 4 12 11v149h54V182h-66z" />
+    <path d="M266 182v46h92c-3 20-16 30-42 30h-38v38h38c23 0 34 8 34 25 0 16-12 26-36 26-18 0-32-5-44-15l-24 32c18 18 44 28 76 28 52 0 86-27 86-68 0-28-18-48-44-55 22-8 38-27 38-55 0-44-34-72-90-72-33 0-60 10-78 28l24 34c12-12 28-18 44-18 22 0 34 10 34 26 0 18-12 30-36 30h-66z" />
+  </g>
+
+  <g transform="rotate(-32 360 360)">
+    <path d="M216 344h168c18 0 32 14 32 32s-14 32-32 32H216v-64z" fill="#f8b748" />
+    <path d="M216 344h168c18 0 32 14 32 32 0 7-2 13-6 18h-24c4-5 6-11 6-18 0-18-14-32-32-32H216v-0.2z" fill="#df9440" />
+    <rect x="352" y="332" width="56" height="88" rx="26" ry="26" fill="#f4a066" />
+    <rect x="320" y="332" width="40" height="88" rx="22" ry="22" fill="#f7d6a1" />
+    <path d="M216 344l-68 32 68 32 32-32-32-32z" fill="#f8e5b8" />
+    <path d="M148 376l-28 32 44 20 20-20-36-32z" fill="#755c4a" />
+  </g>
+</svg>
