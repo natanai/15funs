@@ -45,7 +45,7 @@ Settings → Pages → Build from `main` branch (`/root`). Visit the Pages URL w
 - Tab between buttons; everything is accessible.
 
 ### 8) NVC-friendly tips
-- Use the **need** column with values like: play, creativity, closeness, rest, learning, order, clarity.
+- Use the **need** column with values like: creativity, play, closeness, rest, vitality, learning, order, sensory delight, meaning.
 - Before drawing, each person can say one need alive right now and set filters accordingly.
 - After a pick, each can say: “one thing I enjoyed” + “one wish for next time.”
 

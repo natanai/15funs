@@ -29,6 +29,7 @@ const STORAGE_KEY = '15funs.v1.state';
 const DEFAULTS = { avoidDays: 7, avoidCount: 10, maxDuration: 15, dataUrl: 'data/ideas.csv' };
 const CHARADES_SOURCE = 'data/charades.csv';
 const QUESTIONS_SOURCE = 'data/question_prompts.csv';
+const YESNO_SOURCE = 'data/yes_no_questions.csv';
 
 let state = loadState();
 let dataset = [];          // {id, title, desc, category, need, duration, energy}
@@ -53,6 +54,10 @@ let charadesLoading = null;
 let questionPrompts = null;
 let questionQueue = [];
 let questionLoading = null;
+
+let yesNoPrompts = null;
+let yesNoQueue = [];
+let yesNoLoading = null;
 
 init().catch(err => showError(err));
 
@@ -367,14 +372,15 @@ function renderCard(idea, note){
       </div>`
     : '';
 
-  const questionHtml = isQuestionIdea(idea)
+  const questionConfig = getQuestionConfig(idea);
+  const questionHtml = questionConfig
     ? `
-      <div class="question-pool" data-role="questionPool">
+      <div class="question-pool" data-role="questionPool" data-question-type="${escapeAttr(questionConfig.type)}">
         <div class="question-pool-head">
-          <span class="label">Conversation spark</span>
-          <button type="button" class="timer-btn" data-role="questionNext">New question</button>
+          <span class="label">${escapeHtml(questionConfig.label)}</span>
+          <button type="button" class="timer-btn" data-role="questionNext">${escapeHtml(questionConfig.buttonLabel)}</button>
         </div>
-        <p class="question-status" data-role="questionStatus">Loading questions…</p>
+        <p class="question-status" data-role="questionStatus">${escapeHtml(questionConfig.loadingText)}</p>
         <p class="question-prompt" data-role="questionPrompt"></p>
       </div>`
     : '';
@@ -398,8 +404,8 @@ function renderCard(idea, note){
   if (isCharadesIdea(idea)) {
     setupCharadesFeature().catch(err => console.error(err));
   }
-  if (isQuestionIdea(idea)) {
-    setupQuestionPoolFeature().catch(err => console.error(err));
+  if (questionConfig) {
+    setupQuestionPoolFeature(idea).catch(err => console.error(err));
   }
 }
 
@@ -534,13 +540,29 @@ function isCharadesIdea(idea){
   return !!idea && eqi(idea.title, 'Charades');
 }
 
-function isQuestionIdea(idea){
-  if (!idea) return false;
-  const titles = [
-    '20 questions with a maybe',
-    'Seven-minute question trade',
-  ];
-  return titles.some(title => eqi(idea.title, title));
+function getQuestionConfig(idea){
+  if (!idea) return null;
+  if (eqi(idea.title, '20 questions with a maybe')) {
+    return {
+      type: 'yesno',
+      label: 'Yes/No prompt',
+      buttonLabel: 'New prompt',
+      loadingText: 'Loading clues…',
+      emptyText: 'No clues available yet.',
+      errorText: 'Could not load clues.',
+    };
+  }
+  if (eqi(idea.title, 'Seven-minute question trade')) {
+    return {
+      type: 'conversation',
+      label: 'Conversation spark',
+      buttonLabel: 'New question',
+      loadingText: 'Loading questions…',
+      emptyText: 'No questions available yet.',
+      errorText: 'Could not load questions.',
+    };
+  }
+  return null;
 }
 
 async function setupCharadesFeature(){
@@ -608,7 +630,9 @@ function drawCharadesPrompt(){
   return charadesQueue.pop();
 }
 
-async function setupQuestionPoolFeature(){
+async function setupQuestionPoolFeature(idea){
+  const config = getQuestionConfig(idea);
+  if (!config) return;
   const wrap = els.cardBody.querySelector('[data-role=questionPool]');
   if (!wrap) return;
   const statusEl = wrap.querySelector('[data-role=questionStatus]');
@@ -617,19 +641,21 @@ async function setupQuestionPoolFeature(){
   if (!statusEl || !promptEl || !button) return;
 
   button.disabled = true;
-  statusEl.textContent = 'Loading questions…';
+  statusEl.textContent = config.loadingText;
   try {
-    const prompts = await loadQuestionPrompts();
+    const handlers = getQuestionPoolHandlers(config.type);
+    if (!handlers) return;
+    const prompts = await handlers.load();
     if (!wrap.isConnected) return;
     if (!prompts.length) {
-      statusEl.textContent = 'No questions available yet.';
+      statusEl.textContent = config.emptyText;
       button.disabled = true;
       return;
     }
     statusEl.textContent = '';
     promptEl.textContent = '';
     const showNext = () => {
-      const prompt = drawQuestionPrompt();
+      const prompt = handlers.draw();
       promptEl.textContent = prompt;
     };
     button.disabled = false;
@@ -637,10 +663,20 @@ async function setupQuestionPoolFeature(){
     showNext();
   } catch (err) {
     if (!wrap.isConnected) return;
-    statusEl.textContent = 'Could not load questions.';
+    statusEl.textContent = config.errorText;
     button.disabled = true;
     throw err;
   }
+}
+
+function getQuestionPoolHandlers(type){
+  if (type === 'conversation') {
+    return { load: loadQuestionPrompts, draw: drawQuestionPrompt };
+  }
+  if (type === 'yesno') {
+    return { load: loadYesNoPrompts, draw: drawYesNoPrompt };
+  }
+  return null;
 }
 
 async function loadQuestionPrompts(){
@@ -671,6 +707,36 @@ function drawQuestionPrompt(){
     questionQueue = shuffle(questionPrompts.slice());
   }
   return questionQueue.pop();
+}
+
+async function loadYesNoPrompts(){
+  if (yesNoPrompts) return yesNoPrompts;
+  if (!yesNoLoading) {
+    yesNoLoading = fetch(`${YESNO_SOURCE}?_ts=${Date.now()}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Fetch failed (${res.status}) for ${YESNO_SOURCE}`);
+        return res.text();
+      })
+      .then(text => {
+        const rows = parseCSV(text);
+        if (!rows.length) return [];
+        const header = rows[0].map(h => h.trim().toLowerCase());
+        const idx = header.indexOf('prompt') >= 0 ? header.indexOf('prompt') : 0;
+        return rows.slice(1)
+          .map(r => (r[idx] ?? '').trim())
+          .filter(Boolean);
+      });
+  }
+  yesNoPrompts = await yesNoLoading;
+  return yesNoPrompts;
+}
+
+function drawYesNoPrompt(){
+  if (!yesNoPrompts || !yesNoPrompts.length) return '';
+  if (!yesNoQueue.length) {
+    yesNoQueue = shuffle(yesNoPrompts.slice());
+  }
+  return yesNoQueue.pop();
 }
 
 function escapeAttr(s){
