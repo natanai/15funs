@@ -272,7 +272,9 @@ button:disabled {
 
 .library-head h2 {
   margin: 0;
-  font: 16px/1.4 "Press Start 2P", monospace;
+  font: clamp(18px, 2.1vw, 22px)/1.4 "Press Start 2P", monospace;
+  letter-spacing: 0.08em;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .card {
@@ -541,6 +543,10 @@ button:disabled {
   gap: 14px;
   background: var(--bg);
   box-shadow: 6px 6px 0 0 #000;
+  font-size: clamp(16px, calc(1.15vw + 10px), 20px);
+  line-height: 1.45;
+  text-shadow: none;
+  text-rendering: optimizeLegibility;
 }
 
 .ideas .left {
@@ -550,11 +556,17 @@ button:disabled {
   flex-wrap: wrap;
   gap: 6px;
   align-items: baseline;
-  word-break: break-word;
+  word-break: normal;
 }
 
 .ideas .left strong {
   flex-basis: 100%;
+  font-size: clamp(18px, calc(1.3vw + 12px), 24px);
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  word-break: normal;
 }
 
 .ideas .right {
