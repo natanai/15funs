@@ -1,4 +1,4 @@
 [
-  {"title":"Origami crane","desc":"Fold one, then gift it.","category":"creativity","need":"Contribution","duration":12,"energy":"calm"},
-  {"title":"Story baton","desc":"Alternate one sentence at a time.","category":"play","need":"Mutuality","duration":10,"energy":"playful"}
+  {"title":"Origami crane","desc":"Fold one, then gift it.","category":"creativity","needs":["Contribution","Appreciation"],"duration":12,"energy":"calm"},
+  {"title":"Story baton","desc":"Alternate one sentence at a time.","category":"play","needs":["Mutuality","Empathy"],"duration":10,"energy":"playful"}
 ]

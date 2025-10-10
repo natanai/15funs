@@ -18,7 +18,7 @@ Settings → Pages → Build from `main` branch (`/root`). Visit the Pages URL w
 
 ### 3) Add/maintain ideas
 - Edit `data/ideas.csv` (easiest in GitHub’s web editor). Required column: `title`.
-- Optional columns (any casing): `desc, category, need, duration, energy, id`.
+- Optional columns (any casing): `desc, category, needs, duration, energy, id`.
 - If `id` is omitted, it’s auto-generated from the row contents.
 - Duration is in minutes; used for filtering.
 - Prefer spreadsheets? Click “View idea library → Open the spreadsheet-style CSV” on the site, or
@@ -45,7 +45,15 @@ Settings → Pages → Build from `main` branch (`/root`). Visit the Pages URL w
 - Tab between buttons; everything is accessible.
 
 ### 8) NVC-friendly tips
-- Use the **need** column with values like: creativity, play, closeness, rest, vitality, learning, order, sensory delight, meaning.
+- Use the **needs** column to tag each idea with one or more values separated by `|`. Choose from:
+  Love/Caring, Nurturing, Connection, Belonging, Support, Consideration, Need for all living things to flourish,
+  Inclusion, Community, Safety, Contribution, Peer Respect, Respect, Autonomy, To be seen, Acknowledgement,
+  Appreciation, Trust, Dependability, Honesty, Honor, Commitment, Clarity, Accountability, Causality,
+  Fairness, Justice, Choice, Freedom, Reliability, Act Freely, Choose Freely, Understanding, Recognition,
+  Non-judgmental Communication, Need to matter, Friendship, Space, Peace, Serenity, Do things at my own pace
+  and in my own way, Calm, Participation, To be heard, Equality, Empowerment, Consistency, Genuineness,
+  Mattering, Rest, Mutuality, Relaxation, Closeness, Authenticity, Self expression, Integrity, Empathy,
+  Privacy, Order, Beauty, Control, Predictability, Accomplishment, Physical Fitness, Acceptance, Growth, Security.
 - Before drawing, each person can say one need alive right now and set filters accordingly.
 - After a pick, each can say: “one thing I enjoyed” + “one wish for next time.”
 

@@ -27,12 +27,83 @@ const els = {
 
 const STORAGE_KEY = '15funs.v1.state';
 const DEFAULTS = { avoidDays: 7, avoidCount: 10, maxDuration: 15, dataUrl: 'data/ideas.csv' };
+// All available needs for tagging/filtering (NVC-inspired).
+const ALL_NEEDS = [
+  'Love/Caring',
+  'Nurturing',
+  'Connection',
+  'Belonging',
+  'Support',
+  'Consideration',
+  'Need for all living things to flourish',
+  'Inclusion',
+  'Community',
+  'Safety',
+  'Contribution',
+  'Peer Respect',
+  'Respect',
+  'Autonomy',
+  'To be seen',
+  'Acknowledgement',
+  'Appreciation',
+  'Trust',
+  'Dependability',
+  'Honesty',
+  'Honor',
+  'Commitment',
+  'Clarity',
+  'Accountability',
+  'Causality',
+  'Fairness',
+  'Justice',
+  'Choice',
+  'Freedom',
+  'Reliability',
+  'Act Freely',
+  'Choose Freely',
+  'Understanding',
+  'Recognition',
+  'Non-judgmental Communication',
+  'Need to matter',
+  'Friendship',
+  'Space',
+  'Peace',
+  'Serenity',
+  'Do things at my own pace and in my own way',
+  'Calm',
+  'Participation',
+  'To be heard',
+  'Equality',
+  'Empowerment',
+  'Consistency',
+  'Genuineness',
+  'Mattering',
+  'Rest',
+  'Mutuality',
+  'Relaxation',
+  'Closeness',
+  'Authenticity',
+  'Self expression',
+  'Integrity',
+  'Empathy',
+  'Privacy',
+  'Order',
+  'Beauty',
+  'Control',
+  'Predictability',
+  'Accomplishment',
+  'Physical Fitness',
+  'Acceptance',
+  'Growth',
+  'Security',
+];
+const NEED_LOOKUP = new Map(ALL_NEEDS.map(n => [n.toLowerCase(), n]));
 const CHARADES_SOURCE = 'data/charades.csv';
 const QUESTIONS_SOURCE = 'data/question_prompts.csv';
 const YESNO_SOURCE = 'data/yes_no_questions.csv';
 
 let state = loadState();
-let dataset = [];          // {id, title, desc, category, need, duration, energy}
+let dataset = [];          // {id, title, desc, category, needs[], duration, energy}
 let deck = [];             // array of idea ids in draw order (we rebuild as needed)
 let deckPtr = -1;          // points at last shown index
 let current = null;        // current idea object
@@ -176,24 +247,54 @@ function csvRowsToObjects(rows) {
 
 // --- Normalize data into known shape ---
 function normalize(arr) {
-  // Expected fields (case-insensitive): id?, title, desc?, category?, need?, duration?, energy?
+  // Expected fields (case-insensitive): id?, title, desc?, category?, needs?, duration?, energy?
   return arr.map(x => {
     const obj = Object.fromEntries(Object.entries(x).map(([k,v]) => [k.toLowerCase().trim(), v]));
     const title = obj.title ?? obj.idea ?? obj.name ?? '';
     const desc  = obj.desc ?? obj.description ?? '';
     const category = obj.category ?? '';
-    const need = obj.need ?? '';
+    const needs = normalizeNeeds(obj.needs ?? obj.need ?? '');
     const duration = obj.duration ?? obj.minutes ?? '15';
     const energy = obj.energy ?? '';
     const link = obj.link ?? obj.url ?? '';
     const linkLabel = obj.link_label ?? obj.linklabel ?? '';
-    const id = obj.id || makeId(`${title}|${desc}|${category}|${need}|${duration}|${energy}`);
+    const id = obj.id || makeId(`${title}|${desc}|${category}|${needs.join('|')}|${duration}|${energy}`);
     return {
-      id, title: title || '(untitled)', desc, category, need,
+      id, title: title || '(untitled)', desc, category, needs,
       duration: clamp(int(duration, 15), 1, 240), energy,
       link, linkLabel
     };
   });
+}
+
+function normalizeNeeds(raw){
+  if (!raw) return [];
+  let parts;
+  if (Array.isArray(raw)) {
+    parts = raw.flatMap(n => typeof n === 'string' ? splitNeeds(n) : []);
+  } else if (typeof raw === 'string') {
+    parts = splitNeeds(raw);
+  } else {
+    parts = [];
+  }
+  const seen = new Set();
+  const result = [];
+  parts.forEach(part => {
+    const key = part.toLowerCase();
+    const canonical = NEED_LOOKUP.get(key);
+    if (canonical && !seen.has(canonical)) {
+      seen.add(canonical);
+      result.push(canonical);
+    }
+  });
+  return result;
+}
+
+function splitNeeds(str){
+  return String(str)
+    .split(/[|;,]/)
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 function indexById(list){
   // No-op, but could build a map if needed. Keeping simple.
@@ -238,7 +339,7 @@ function applyFilters(list){
   const maxDur = int(els.maxDuration.value, DEFAULTS.maxDuration);
   return list.filter(x =>
     (!category || eqi(x.category, category)) &&
-    (!need     || eqi(x.need, need)) &&
+    (!need     || (Array.isArray(x.needs) && x.needs.some(n => eqi(n, need)))) &&
     (x.duration <= maxDur)
   );
 }
@@ -341,7 +442,9 @@ function renderCard(idea, note){
 
   const tags = [];
   if (idea.category) tags.push(`<span class="badge">${escapeHtml(idea.category)}</span>`);
-  if (idea.need) tags.push(`<span class="badge">${escapeHtml(idea.need)}</span>`);
+  if (Array.isArray(idea.needs)) {
+    idea.needs.forEach(n => tags.push(`<span class="badge">${escapeHtml(n)}</span>`));
+  }
   tags.push(`<span class="badge">${idea.duration} min</span>`);
 
   const descHtml = idea.desc ? escapeHtml(idea.desc).replace(/\n/g, '<br>') : '';
@@ -759,9 +862,12 @@ function renderList(){
   list.forEach(item => {
     const li = document.createElement('li');
     const left = document.createElement('div');
+    const needTags = Array.isArray(item.needs)
+      ? item.needs.map(n => ` <span class="tag">· ${escapeHtml(n)}</span>`).join('')
+      : '';
     left.innerHTML = `<strong>${escapeHtml(item.title)}</strong>
       ${item.category ? ` <span class="tag">· ${escapeHtml(item.category)}</span>`:''}
-      ${item.need ? ` <span class="tag">· ${escapeHtml(item.need)}</span>`:''}
+      ${needTags}
       <span class="tag">· ${item.duration}m</span>`;
     const right = document.createElement('div'); right.className='right';
     const isRecent = recent.has(item.id) || lastN.has(item.id);
@@ -789,13 +895,11 @@ function renderList(){
   });
   els.ideasList.replaceChildren(frag);
 }
-
 function populateFilters(list){
   const cats = Array.from(new Set(list.map(x => x.category).filter(Boolean))).sort();
-  const needs = Array.from(new Set(list.map(x => x.need).filter(Boolean))).sort();
 
   fillSelect(els.categoryFilter, cats);
-  fillSelect(els.needFilter, needs);
+  fillSelect(els.needFilter, ALL_NEEDS);
 }
 function fillSelect(sel, values){
   const cur = sel.value;
