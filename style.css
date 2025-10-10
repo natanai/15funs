@@ -316,6 +316,7 @@ button:disabled {
   display: grid;
   gap: 18px;
   justify-items: center;
+  width: 100%;
   opacity: 0;
   transform: translateY(14px) scale(0.96);
   position: relative;
@@ -384,11 +385,13 @@ button:disabled {
 
 .desc {
   max-width: 52ch;
+  width: 100%;
   margin-inline: auto;
   font-size: 18px;
   text-transform: none;
   letter-spacing: 0.02em;
   color: var(--text);
+  overflow-wrap: break-word;
 }
 
 .card-body.has-idea .title {
