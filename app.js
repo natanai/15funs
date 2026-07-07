@@ -150,7 +150,7 @@ async function init() {
   [els.avoidDays, els.avoidCount, els.maxDuration].forEach(el => el.onchange = settingsChanged);
   [els.categoryFilter, els.needFilter, els.hideRecentlySeen].forEach(el => el.onchange = filtersChanged);
   els.resetBtn.onclick = resetHistory;
-  els.drawBtn.onclick = () => draw();
+  els.drawBtn.onclick = () => draw().catch(err => console.error(err));
   els.clearBtn.onclick = clearCurrent;
   els.doneBtn.onclick = markDone;
   els.showLibraryBtn.onclick = showLibrary;
@@ -211,36 +211,38 @@ function filtersChanged()   { renderList(); }
 
 async function reloadData({ mode, showNote } = {}) {
   persistSettings();
-  const hasUpload = state.uploadedData && typeof state.uploadedData === 'object';
-  const targetMode = mode ?? (hasUpload && state.dataMode === 'upload' ? 'upload' : 'url');
   try {
-    if (targetMode === 'upload' && hasUpload) {
-      const { name, text, format } = state.uploadedData;
-      const ideas = parseIdeas(text, name, format);
-      state.dataMode = 'upload';
-      state.lastSource = { type: 'upload', label: name || 'Uploaded file' };
-      saveState();
-      applyDataset(ideas, {
-        sourceType: 'upload',
-        sourceLabel: state.lastSource.label,
-        note: showNote ? `Loaded ${ideas.length} ideas from ${state.lastSource.label}.` : undefined,
-      });
-    } else {
-      const url = (state.dataUrl || '').trim() || DEFAULTS.dataUrl;
-      const ideas = await fetchIdeas(url);
-      state.dataMode = 'url';
-      state.lastSource = { type: 'url', label: url };
-      saveState();
-      applyDataset(ideas, {
-        sourceType: 'url',
-        sourceLabel: url,
-        note: showNote ? `Loaded ${ideas.length} ideas from ${url}.` : undefined,
-      });
-    }
+    const loaded = await loadIdeasFromCurrentSource(mode);
+    applyDataset(loaded.ideas, {
+      sourceType: loaded.sourceType,
+      sourceLabel: loaded.sourceLabel,
+      note: showNote ? `Loaded ${loaded.ideas.length} ideas from ${loaded.sourceLabel}.` : undefined,
+    });
   } catch (e) {
     showError(e);
     updateUploadStatus(`Could not load data: ${String(e.message || e)}`);
   }
+}
+
+async function loadIdeasFromCurrentSource(mode) {
+  const hasUpload = state.uploadedData && typeof state.uploadedData === 'object';
+  const targetMode = mode ?? (hasUpload && state.dataMode === 'upload' ? 'upload' : 'url');
+
+  if (targetMode === 'upload' && hasUpload) {
+    const { name, text, format } = state.uploadedData;
+    const ideas = parseIdeas(text, name, format);
+    state.dataMode = 'upload';
+    state.lastSource = { type: 'upload', label: name || 'Uploaded file' };
+    saveState();
+    return { ideas, sourceType: 'upload', sourceLabel: state.lastSource.label };
+  }
+
+  const url = (state.dataUrl || '').trim() || DEFAULTS.dataUrl;
+  const ideas = await fetchIdeas(url);
+  state.dataMode = 'url';
+  state.lastSource = { type: 'url', label: url };
+  saveState();
+  return { ideas, sourceType: 'url', sourceLabel: url };
 }
 
 function applyDataset(ideas, { sourceType, sourceLabel, note } = {}) {
@@ -529,7 +531,8 @@ function shuffle(arr){
   return arr;
 }
 
-function draw(){
+async function draw(){
+  await refreshUrlIdeasBeforeDraw();
   if (!deck.length) rebuildDeck(true);
   let nextIdx = deckPtr + 1;
 
@@ -543,6 +546,29 @@ function draw(){
   deckPtr = nextIdx;
 
   renderCard(idea);
+}
+
+async function refreshUrlIdeasBeforeDraw(){
+  persistSettings();
+  if (state.dataMode === 'upload') return;
+
+  const previousDisabled = els.drawBtn.disabled;
+  els.drawBtn.disabled = true;
+  els.drawBtn.textContent = 'Loading…';
+  try {
+    const loaded = await loadIdeasFromCurrentSource('url');
+    applyDataset(loaded.ideas, {
+      sourceType: loaded.sourceType,
+      sourceLabel: loaded.sourceLabel,
+    });
+  } catch (e) {
+    showError(e);
+    updateUploadStatus(`Could not refresh ideas: ${String(e.message || e)}`);
+    throw e;
+  } finally {
+    els.drawBtn.disabled = previousDisabled;
+    els.drawBtn.textContent = 'Draw';
+  }
 }
 
 function clearCurrent(){
