@@ -14,7 +14,9 @@ const els = {
   hideRecentlySeen: document.getElementById('hideRecentlySeen'),
   resetBtn: document.getElementById('resetBtn'),
   drawBtn: document.getElementById('drawBtn'),
-  clearBtn: document.getElementById('clearBtn'),
+  redrawBtn: document.getElementById('redrawBtn'),
+  actionStatus: document.getElementById('actionStatus'),
+  filterSummary: document.getElementById('filterSummary'),
   doneBtn: document.getElementById('doneBtn'),
   cardBody: document.getElementById('cardBody'),
   ideasList: document.getElementById('ideasList'),
@@ -111,7 +113,8 @@ let dataset = [];          // {id, title, desc, category, needs[], duration, ene
 let deck = [];             // array of idea ids in draw order (we rebuild as needed)
 let deckPtr = -1;          // points at last shown index
 let current = null;        // current idea object
-let currentWasCommitted = false;
+let drawing = false;
+let sessionDrawnIds = new Set();
 let currentSource = { type: 'url', label: DEFAULTS.dataUrl };
 
 const timerState = {
@@ -151,7 +154,7 @@ async function init() {
   [els.categoryFilter, els.needFilter, els.hideRecentlySeen].forEach(el => el.onchange = filtersChanged);
   els.resetBtn.onclick = resetHistory;
   els.drawBtn.onclick = () => draw().catch(err => console.error(err));
-  els.clearBtn.onclick = clearCurrent;
+  els.redrawBtn.onclick = () => draw().catch(err => console.error(err));
   els.doneBtn.onclick = markDone;
   els.showLibraryBtn.onclick = showLibrary;
   els.hideLibraryBtn.onclick = hideLibrary;
@@ -173,6 +176,7 @@ async function init() {
   }
 
   updateUploadStatus();
+  updateFilterSummary();
 
   await reloadData();
 }
@@ -206,8 +210,40 @@ function persistSettings() {
   state.maxDuration = int(els.maxDuration.value, DEFAULTS.maxDuration);
   saveState();
 }
-function settingsChanged() { persistSettings(); rebuildDeck(); renderList(); }
-function filtersChanged()   { renderList(); }
+function settingsChanged() {
+  persistSettings();
+  sessionDrawnIds.clear();
+  rebuildDeck(true);
+  renderList();
+  updateFilterSummary();
+}
+function filtersChanged() {
+  sessionDrawnIds.clear();
+  rebuildDeck(true);
+  renderList();
+  updateFilterSummary();
+}
+function updateFilterSummary() {
+  const duration = int(els.maxDuration.value, DEFAULTS.maxDuration);
+  const category = els.categoryFilter.value;
+  const need = els.needFilter.value;
+  const qualifiers = [category, need].filter(Boolean);
+  els.filterSummary.textContent = `Up to ${duration} min${qualifiers.length ? ' · ' + qualifiers.join(' · ') : ''}`;
+}
+function showActionStatus(message, announcementOnly = false) {
+  els.actionStatus.textContent = message || '';
+  els.actionStatus.hidden = !message;
+  els.actionStatus.classList.toggle('announcement-only', announcementOnly);
+}
+function setCardActions(hasIdea) {
+  els.drawBtn.hidden = hasIdea;
+  els.doneBtn.hidden = !hasIdea;
+  els.redrawBtn.hidden = !hasIdea;
+  els.drawBtn.textContent = getHistory().length ? 'Draw next idea' : 'Draw an idea';
+  els.doneBtn.disabled = !hasIdea || drawing;
+  els.redrawBtn.disabled = !hasIdea || drawing;
+  els.drawBtn.disabled = drawing;
+}
 
 async function reloadData({ mode, showNote } = {}) {
   persistSettings();
@@ -245,18 +281,21 @@ async function loadIdeasFromCurrentSource(mode) {
   return { ideas, sourceType: 'url', sourceLabel: url };
 }
 
-function applyDataset(ideas, { sourceType, sourceLabel, note } = {}) {
-  if (sourceType) {
-    currentSource = { type: sourceType, label: sourceLabel ?? '' };
-  }
+function applyDataset(ideas, { sourceType, sourceLabel, note, preserveCurrent = false } = {}) {
+  if (sourceType) currentSource = { type: sourceType, label: sourceLabel ?? '' };
   dataset = ideas;
   indexById(dataset);
   populateFilters(dataset);
-  rebuildDeck(/*resetPtr=*/true);
+  rebuildDeck(true);
   renderList();
-  renderCard(null, note);
+  if (!preserveCurrent) {
+    sessionDrawnIds.clear();
+    renderCard(null, note);
+    showActionStatus(note || '');
+  }
   enableControls();
   updateUploadStatus();
+  updateFilterSummary();
 }
 
 function updateUploadStatus(explicitMessage) {
@@ -327,7 +366,7 @@ async function handleUploadSelection(evt) {
 
 function showError(e) {
   console.error(e);
-  els.cardBody.innerHTML = `<p class="hint">Couldn’t load ideas.<br><small>${escapeHtml(String(e.message || e))}</small></p>`;
+  showActionStatus(`Could not load ideas: ${String(e.message || e)}`);
 }
 
 async function fetchIdeas(url) {
@@ -531,69 +570,94 @@ function shuffle(arr){
   return arr;
 }
 
-async function draw(){
-  await refreshUrlIdeasBeforeDraw();
-  if (!deck.length) rebuildDeck(true);
-  let nextIdx = deckPtr + 1;
+async function draw() {
+  if (drawing) return;
+  const previouslyShown = current;
+  drawing = true;
+  setCardActions(!!current);
+  if (els.drawBtn && !els.drawBtn.hidden) els.drawBtn.textContent = 'Loading…';
+  showActionStatus('');
 
-  // If we ran off the end, rebuild with fresh priorities
-  if (nextIdx >= deck.length) { rebuildDeck(true); nextIdx = 0; }
-  const idea = deck[nextIdx];
-  if (!idea) { renderCard(null, 'No ideas match your filters.'); return; }
+  try {
+    await refreshUrlIdeasBeforeDraw();
+    const matching = applyFilters(dataset);
+    if (!matching.length) {
+      if (previouslyShown) {
+        showActionStatus('No ideas match these filters. Try adjusting them.');
+      } else {
+        renderCard(null, 'No ideas match your filters. Try Customize draws.');
+      }
+      return;
+    }
+    if (previouslyShown && matching.every(item => item.id === previouslyShown.id)) {
+      showActionStatus('No other ideas match these filters. Try changing them.');
+      return;
+    }
 
-  current = idea;
-  currentWasCommitted = false;
-  deckPtr = nextIdx;
-
-  renderCard(idea);
+    let next = null;
+    for (let pass = 0; pass < 2 && !next; pass++) {
+      if (pass === 1) {
+        sessionDrawnIds.clear();
+        rebuildDeck(true);
+      }
+      if (!deck.length) rebuildDeck(true);
+      while (deckPtr + 1 < deck.length) {
+        const candidate = deck[++deckPtr];
+        if (candidate.id === previouslyShown?.id || sessionDrawnIds.has(candidate.id)) continue;
+        next = candidate;
+        break;
+      }
+    }
+    if (!next) {
+      showActionStatus('No different idea is available with these filters.');
+      return;
+    }
+    sessionDrawnIds.add(next.id);
+    current = next;
+    renderCard(next);
+    showActionStatus(`Drawn: ${next.title}`, true);
+    els.doneBtn.focus({ preventScroll: true });
+  } catch (err) {
+    showError(err);
+  } finally {
+    drawing = false;
+    setCardActions(!!current);
+  }
 }
 
 async function refreshUrlIdeasBeforeDraw(){
   persistSettings();
   if (state.dataMode === 'upload') return;
-
-  const previousDisabled = els.drawBtn.disabled;
-  els.drawBtn.disabled = true;
-  els.drawBtn.textContent = 'Loading…';
-  try {
-    const loaded = await loadIdeasFromCurrentSource('url');
+  const loaded = await loadIdeasFromCurrentSource('url');
+  const sourceChanged = loaded.sourceType !== currentSource.type || loaded.sourceLabel !== currentSource.label;
+  if (sourceChanged || JSON.stringify(loaded.ideas) !== JSON.stringify(dataset)) {
     applyDataset(loaded.ideas, {
       sourceType: loaded.sourceType,
       sourceLabel: loaded.sourceLabel,
+      preserveCurrent: true,
     });
-  } catch (e) {
-    showError(e);
-    updateUploadStatus(`Could not refresh ideas: ${String(e.message || e)}`);
-    throw e;
-  } finally {
-    els.drawBtn.disabled = previousDisabled;
-    els.drawBtn.textContent = 'Draw';
   }
-}
-
-function clearCurrent(){
-  if (!current) return;
-  renderCard(null, 'Cleared current idea.');
 }
 
 function markDone(){
-  const h = getHistory();
-  const last = h[h.length - 1];
-  if (current && (!last || last.id !== current.id)) {
-    pushHistory(current.id);
-    currentWasCommitted = true;
-    renderList();
-  }
-  renderCard(null, 'Nice! Press “Draw” when you’re ready for another.');
+  if (!current || drawing) return;
+  const finished = current;
+  pushHistory(finished.id);
+  renderList();
+  renderCard(null, 'Want another idea?');
+  showActionStatus(`Completed: ${finished.title}`);
+  els.drawBtn.focus({ preventScroll: true });
 }
 
 function resetHistory(){
   if (!confirm('Reset local history and deck on this device?')) return;
   state.history = [];
+  sessionDrawnIds.clear();
   saveState();
   rebuildDeck(true);
   renderList();
   renderCard(null, 'History cleared.');
+  showActionStatus('Completed-activity history cleared.');
 }
 
 function renderCard(idea, note){
@@ -604,10 +668,8 @@ function renderCard(idea, note){
 
   if (!idea){
     current = null;
-    currentWasCommitted = false;
-    card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
-    els.doneBtn.disabled = true;
-    if (els.clearBtn) els.clearBtn.disabled = true;
+      card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
+    setCardActions(false);
     return;
   }
 
@@ -623,16 +685,17 @@ function renderCard(idea, note){
     ? `<p class="resource"><a href="${escapeAttr(idea.link)}" target="_blank" rel="noopener">${escapeHtml(idea.linkLabel || 'Open resource')} ↗</a></p>`
     : '';
   const timerHtml = `
-    <div class="timer" data-role="timer">
+    <details class="timer" data-role="timer">
+      <summary>⏱ ${idea.duration} min timer (optional)</summary>
       <div class="timer-head">
         <span class="label">Countdown</span>
         <span class="timer-display" data-role="timerValue">${formatDurationMs(idea.duration * 60000)}</span>
       </div>
       <div class="timer-controls">
-        <button type="button" class="timer-btn" data-role="timerToggle">Pause</button>
+        <button type="button" class="timer-btn" data-role="timerToggle">Start</button>
         <button type="button" class="timer-btn" data-role="timerReset">Reset</button>
       </div>
-    </div>`;
+    </details>`;
 
   const charadesHtml = isCharadesIdea(idea)
     ? `
@@ -677,10 +740,7 @@ function renderCard(idea, note){
     </div>
   `;
 
-  els.doneBtn.disabled = false;
-  if (els.clearBtn) els.clearBtn.disabled = false;
-  void card.offsetWidth;
-  requestAnimationFrame(() => card.classList.add('is-revealing'));
+  setCardActions(true);
   setupTimer(idea.duration);
   if (isCharadesIdea(idea)) {
     setupCharadesFeature().catch(err => console.error(err));
@@ -717,7 +777,6 @@ function setupTimer(durationMinutes){
   if (timerState.elements.reset) timerState.elements.reset.addEventListener('click', onTimerReset);
   timerState.elements.container.classList.remove('is-finished');
   updateTimerDisplay();
-  startTimerCountdown();
 }
 
 function teardownTimer(){
@@ -808,7 +867,7 @@ function resetTimer(){
   timerState.remainingMs = timerState.durationMs;
   timerState.elements.container?.classList.remove('is-finished');
   updateTimerDisplay();
-  startTimerCountdown();
+  timerState.elements.toggle.textContent = 'Start';
 }
 
 function onTimerToggle(evt){
@@ -1041,12 +1100,10 @@ function renderList(){
   const lastN = new Set(uniqueRecentIds(int(els.avoidCount.value, DEFAULTS.avoidCount)));
   const hideRecent = els.hideRecentlySeen.checked;
 
-  const statusText = `${list.length} visible • ${dataset.length} total • ${getHistory().length} picks in history`;
+  const statusText = `${list.length} matching ideas · ${getHistory().length} completed`;
   els.counts.textContent = statusText;
   if (els.libraryStatus) {
-    const base = `${dataset.length} ideas loaded (${list.length} matching filters)`;
-    const sourceInfo = describeCurrentSource();
-    els.libraryStatus.textContent = sourceInfo ? `${base} • ${sourceInfo}` : base;
+    els.libraryStatus.textContent = `(${list.length})`;
   }
 
   const frag = document.createDocumentFragment();
@@ -1084,12 +1141,11 @@ function renderList(){
     go.onclick = () => {
       renderCard(item);
       current = item;
-      const h = getHistory();
-      const last = h[h.length - 1];
-      currentWasCommitted = !!(last && last.id === item.id);
+      sessionDrawnIds.add(item.id);
+      showActionStatus(`Selected: ${item.title}`, true);
       const idx = deck.findIndex(d => d.id === item.id);
       deckPtr = idx !== -1 ? idx : -1;
-      els.doneBtn.disabled = false;
+      setCardActions(true);
       if (!els.libraryPanel.hidden) {
         hideLibrary();
       }
@@ -1114,17 +1170,15 @@ function populateFilters(list){
 }
 function fillSelect(sel, values){
   const cur = sel.value;
-  sel.innerHTML = `<option value="">— any —</option>` + values.map(v => `<option>${escapeHtml(v)}</option>`).join('');
+  sel.innerHTML = `<option value="">Any ${sel === els.categoryFilter ? 'category' : 'need'}</option>` + values.map(v => `<option>${escapeHtml(v)}</option>`).join('');
   // restore if still present
   const opt = Array.from(sel.options).find(o => o.value === cur);
   if (opt) sel.value = cur;
 }
 
 function enableControls(){
-  [els.drawBtn, els.clearBtn, els.doneBtn].forEach(btn => btn.disabled = false);
-  if (els.clearBtn) els.clearBtn.disabled = true;
-  els.doneBtn.disabled = true;
   if (els.showLibraryBtn) els.showLibraryBtn.disabled = false;
+  setCardActions(!!current);
 }
 
 function showLibrary(){
@@ -1132,7 +1186,8 @@ function showLibrary(){
   els.layout.classList.add('with-library');
   els.showLibraryBtn.setAttribute('aria-expanded', 'true');
   requestAnimationFrame(() => {
-    els.libraryPanel.focus();
+    els.libraryPanel.scrollIntoView({ block: 'start' });
+    els.libraryPanel.focus({ preventScroll: true });
   });
 }
 

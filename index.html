@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>15funs</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f7f1dd">
+  <meta charset="utf-8">
+  <title>15funs — draw something fun</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#292831">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="15funs">
@@ -13,102 +13,92 @@
   <link rel="manifest" href="site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icons/app-icon.svg">
   <link rel="apple-touch-icon" href="icons/app-icon.svg">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
   <h1>15funs</h1>
-  <p role="note">Screen-free, ~15-minute adventures you can shuffle without repeats.</p>
+  <p>Small adventures. Less deciding.</p>
 </header>
 
 <main class="layout" id="layout">
-  <section class="panel settings" aria-labelledby="settings-title">
-    <h2 id="settings-title">Deck settings</h2>
-
-    <div class="buttons library-toggle">
-      <button id="showLibraryBtn" class="secondary" aria-haspopup="true" aria-expanded="false">
-        View idea library
+  <section class="panel card" aria-labelledby="draw-heading">
+    <div class="card-topline">
+      <h2 id="draw-heading">Your next idea</h2>
+      <button id="showLibraryBtn" type="button" class="text-button" aria-expanded="false" aria-controls="libraryPanel">
+        Browse ideas <span id="libraryStatus" class="library-count"></span>
       </button>
-      <span id="libraryStatus" class="hint" aria-live="polite"></span>
     </div>
-
-    <label class="row">
-      <span>Data source</span>
-      <input id="dataUrl" type="url" inputmode="url"
-             value="data/ideas.csv"
-             aria-describedby="data-help">
-      <button id="reloadBtn" class="secondary">Load</button>
-    </label>
-    <p id="data-help" class="hint">
-      The default source of truth is <code>data/ideas.csv</code>. The app refreshes this URL before every draw.
-      <a href="data/ideas.csv">Open the spreadsheet-style CSV</a> to add or remove ideas.
-    </p>
-
-    <div class="buttons upload-actions">
-      <input id="uploadInput" type="file" accept=".csv,.json,text/csv,application/json" hidden>
-      <button id="uploadBtn" type="button" class="secondary">Upload file…</button>
-      <button id="useUploadedBtn" type="button" class="secondary" hidden>Use uploaded file</button>
+    <div class="draw-actions" role="group" aria-label="Idea actions">
+      <button id="drawBtn" type="button" class="primary">Draw an idea</button>
+      <button id="doneBtn" type="button" class="success" disabled hidden>✓ Complete</button>
+      <button id="redrawBtn" type="button" class="secondary compact-action" disabled hidden aria-label="Draw a different idea without marking this one complete">↻ Another</button>
     </div>
-    <p id="uploadStatus" class="hint" aria-live="polite"></p>
-
-    <div class="row-grid">
-      <label>
-        <span>Avoid repeats for at least (days)</span>
-        <input id="avoidDays" type="number" min="0" step="1" value="7">
-      </label>
-      <label>
-        <span>Also avoid last N picks</span>
-        <input id="avoidCount" type="number" min="0" step="1" value="10">
-      </label>
+    <p id="actionStatus" class="action-status" aria-live="polite" role="status" hidden></p>
+    <div class="card-body" id="cardBody">
+      <p class="hint">Draw a surprise activity to do together.</p>
     </div>
-
-    <div class="row-grid">
-      <label>
-        <span>Filter by category (optional)</span>
-        <select id="categoryFilter">
-          <option value="">— any —</option>
-        </select>
-      </label>
-      <label>
-        <span>Filter by need (optional)</span>
-        <select id="needFilter">
-          <option value="">— any —</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="row-grid">
-      <label>
-        <span>Duration (minutes) ≤</span>
-        <input id="maxDuration" type="number" min="1" step="1" value="15">
-      </label>
-      <label class="checkbox">
-        <input id="hideRecentlySeen" type="checkbox" checked>
-        <span>Hide items marked “recent” in the list</span>
-      </label>
-    </div>
-
-    <div class="buttons">
-      <button id="resetBtn" class="danger" aria-describedby="reset-help">Reset history</button>
-      <span id="reset-help" class="hint">Clears local history and deck only on this device.</span>
-    </div>
-
-    <details>
-      <summary>About needs & categories (NVC)</summary>
-      <p>“Needs” are values like Appreciation, Mutuality, Rest, Autonomy, Belonging, and dozens more from the NVC list.
-      Labeling them helps pick something that tends to everyone’s needs today.</p>
-    </details>
   </section>
 
-  <section class="panel card" aria-live="polite" aria-atomic="true">
-    <div class="card-body" id="cardBody">
-      <p class="hint">Press “Draw” to pick your next tiny adventure.</p>
-    </div>
-    <div class="buttons">
-      <button id="drawBtn" class="primary">Draw</button>
-      <button id="clearBtn" class="secondary" disabled>Clear</button>
-      <button id="doneBtn" class="success" disabled>Mark Done</button>
-    </div>
+  <section class="panel settings" aria-labelledby="settings-title">
+    <details id="settingsDetails">
+      <summary id="settings-title">Customize draws <span id="filterSummary" class="filter-summary">Up to 15 min</span></summary>
+      <div class="settings-inner">
+        <div class="row-grid">
+          <label>
+            <span>Category</span>
+            <select id="categoryFilter"><option value="">Any category</option></select>
+          </label>
+          <label>
+            <span>Need</span>
+            <select id="needFilter"><option value="">Any need</option></select>
+          </label>
+        </div>
+        <div class="row-grid">
+          <label>
+            <span>Maximum minutes</span>
+            <input id="maxDuration" type="number" inputmode="numeric" min="1" max="240" step="1" value="15">
+          </label>
+          <label>
+            <span>Avoid repeats (days)</span>
+            <input id="avoidDays" type="number" inputmode="numeric" min="0" step="1" value="7">
+          </label>
+        </div>
+        <details class="advanced">
+          <summary>More options</summary>
+          <div class="settings-inner">
+            <label>
+              <span>Also avoid last N completed activities</span>
+              <input id="avoidCount" type="number" inputmode="numeric" min="0" step="1" value="10">
+            </label>
+            <label class="checkbox">
+              <input id="hideRecentlySeen" type="checkbox" checked>
+              <span>Hide recently completed ideas in the library</span>
+            </label>
+            <label class="source-label" for="dataUrl"><span>Data source (CSV or JSON URL)</span></label>
+            <div class="source-row">
+              <input id="dataUrl" type="url" inputmode="url" value="data/ideas.csv" aria-describedby="data-help">
+              <button id="reloadBtn" type="button" class="secondary">Load</button>
+            </div>
+            <p id="data-help" class="hint">The default idea list is <a href="data/ideas.csv">data/ideas.csv</a>. It is checked before each draw.</p>
+            <input id="uploadInput" type="file" accept=".csv,.json,text/csv,application/json" hidden>
+            <div class="utility-actions">
+              <button id="uploadBtn" type="button" class="secondary">Upload ideas</button>
+              <button id="useUploadedBtn" type="button" class="secondary" hidden>Use uploaded file</button>
+            </div>
+            <p id="uploadStatus" class="hint" aria-live="polite"></p>
+            <div class="reset-area">
+              <button id="resetBtn" type="button" class="danger" aria-describedby="reset-help">Reset history</button>
+              <p id="reset-help" class="hint">Erases the completed-activity history on this device.</p>
+            </div>
+            <details class="about-needs">
+              <summary>About needs and categories</summary>
+              <p>Needs are values such as Appreciation, Mutuality, Rest, Autonomy, and Belonging. They can help you choose an activity together.</p>
+            </details>
+          </div>
+        </details>
+      </div>
+    </details>
   </section>
 
   <section class="panel list" id="libraryPanel" aria-labelledby="list-title" hidden tabindex="-1">
@@ -117,19 +107,15 @@
         <h2 id="list-title">Idea library</h2>
         <div id="counts" class="hint"></div>
       </div>
-      <button id="hideLibraryBtn" class="secondary" aria-label="Close idea library">Close</button>
+      <button id="hideLibraryBtn" type="button" class="secondary" aria-label="Close idea library">Close</button>
     </div>
     <ul id="ideasList" class="ideas"></ul>
   </section>
 </main>
 
 <footer class="foot">
-  <small>
-    Data persists locally via <code>localStorage</code>. To start fresh, use “Reset history” or clear site data.
-    • Built for two humans tending to everyone’s needs 🦒
-  </small>
+  <small>Completed activities are saved in this browser. 15funs works without an account.</small>
 </footer>
-
 <script src="app.js" type="module"></script>
 </body>
 </html>

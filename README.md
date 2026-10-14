@@ -1,6 +1,21 @@
 ## 15funs
 
-A static GitHub Pages app for drawing screen-free, ~15-minute ideas without recent repeats.
+A static GitHub Pages app for drawing screen-free, ~15-minute ideas without recent repeats. The interface is designed mobile-first: **draw, decide, complete**.
+
+## Mobile interaction contract
+
+- **Draw an idea** is the one primary action when no idea is selected. On mobile, the action stays within reach in a bottom dock, even after a long card or completion message.
+- **✓ Complete** means the activity actually happened. It saves an entry in the local history, returns to the ready state, and makes **Draw next idea** immediately available in the same place.
+- **↻ Another** rejects the current suggestion **without** recording it as completed. The picker avoids suggestions already drawn in the current cycle, even if they were rejected.
+- **Customize draws** stays folded away unless needed. **More options** contains source management, history reset, and less-used settings.
+- **Browse ideas** opens the full list without spoiling the next random suggestion.
+- An optional timer starts only when the user presses **Start**. It doesn't begin counting down while someone is reading a suggestion.
+
+## Testing
+
+Run the dependency-free interaction tests with `node tests/ux-smoke.mjs`. The tests cover drawing, redraw without completion, shuffle continuity, changed CSV content, completion persistence, unavailable alternatives, and failed network refreshes.
+
+Before merging a visual change, check on iOS Safari and installed Home Screen mode: initial draw, long description, dock over safe area, filters, keyboard, portrait/landscape, Browse/Close, large text, and reduced motion. Automated logic tests do **not** replace these visual checks.
 
 ## The one thing to know: `data/ideas.csv` is the source of truth
 
@@ -61,26 +76,26 @@ Settings → Pages → Build from `main` branch (`/root`). Visit the Pages URL w
 
 ## Idea library without spoilers
 
-- The full list lives behind the **View idea library** button so you can draw without seeing every idea first.
+- The full list lives behind **Browse ideas** so you can draw without seeing every idea first.
 - When it’s open, use filters, pick buttons, or press Escape/Close to tuck it away again.
 - Counts stay visible near the button so you always know how many ideas are loaded.
 
 ## Non-repeating logic
 
-- Two knobs: **Avoid repeats for at least (days)** and **Also avoid last N picks**.
+- Two knobs: **Avoid repeats (days)** and **Also avoid last N completed activities**.
 - The app prioritizes items not seen in either window. If everything has been seen recently, it surfaces the least-recent ones next.
-- History lives only on the device in `localStorage`. Reset via the button or by clearing site data.
+- History records **completed activities**, not every suggestion or rejected idea. It lives only on this device in `localStorage`. Reset via **Customize draws → More options → Reset history**, or by clearing site data.
 
 ## Using a different data source
 
-- Paste any CSV or JSON URL into **Data source** and click **Load**.
+- Open **Customize draws → More options**, paste any CSV or JSON URL into **Data source**, and press **Load**.
 - For another GitHub repo, use the file’s raw URL.
 - For Google Sheets, publish or export the sheet as CSV and use that CSV URL.
 - Uploaded files are stored only in that browser’s `localStorage`; they do not update the repo.
 
 ## Keyboard
 
-- `Enter` on **Draw** picks the next idea.
+- `Enter` or `Space` on the focused **Draw an idea** / **Draw next idea** button picks the next idea.
 - Tab between buttons; everything is accessible.
 
 ## NVC-friendly tips
