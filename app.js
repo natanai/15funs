@@ -113,7 +113,6 @@ let dataset = [];          // {id, title, desc, category, needs[], duration, ene
 let deck = [];             // array of idea ids in draw order (we rebuild as needed)
 let deckPtr = -1;          // points at last shown index
 let current = null;        // current idea object
-let currentWasCommitted = false;
 let drawing = false;
 let sessionDrawnIds = new Set();
 let currentSource = { type: 'url', label: DEFAULTS.dataUrl };
@@ -231,9 +230,10 @@ function updateFilterSummary() {
   const qualifiers = [category, need].filter(Boolean);
   els.filterSummary.textContent = `Up to ${duration} min${qualifiers.length ? ' · ' + qualifiers.join(' · ') : ''}`;
 }
-function showActionStatus(message) {
+function showActionStatus(message, announcementOnly = false) {
   els.actionStatus.textContent = message || '';
   els.actionStatus.hidden = !message;
+  els.actionStatus.classList.toggle('announcement-only', announcementOnly);
 }
 function setCardActions(hasIdea) {
   els.drawBtn.hidden = hasIdea;
@@ -242,7 +242,7 @@ function setCardActions(hasIdea) {
   els.drawBtn.textContent = getHistory().length ? 'Draw next idea' : 'Draw an idea';
   els.doneBtn.disabled = !hasIdea || drawing;
   els.redrawBtn.disabled = !hasIdea || drawing;
-  els.drawBtn.disabled = drawing || !dataset.length;
+  els.drawBtn.disabled = drawing;
 }
 
 async function reloadData({ mode, showNote } = {}) {
@@ -614,9 +614,8 @@ async function draw() {
     }
     sessionDrawnIds.add(next.id);
     current = next;
-    currentWasCommitted = false;
     renderCard(next);
-    showActionStatus(`Drawn: ${next.title}`);
+    showActionStatus(`Drawn: ${next.title}`, true);
   } catch (err) {
     showError(err);
   } finally {
@@ -642,11 +641,8 @@ async function refreshUrlIdeasBeforeDraw(){
 function markDone(){
   if (!current || drawing) return;
   const finished = current;
-  if (!currentWasCommitted) {
-    pushHistory(finished.id);
-    currentWasCommitted = true;
-    renderList();
-  }
+  pushHistory(finished.id);
+  renderList();
   renderCard(null, 'Want another idea?');
   showActionStatus(`Completed: ${finished.title}`);
 }
@@ -670,8 +666,7 @@ function renderCard(idea, note){
 
   if (!idea){
     current = null;
-    currentWasCommitted = false;
-    card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
+      card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
     setCardActions(false);
     return;
   }
@@ -1145,10 +1140,7 @@ function renderList(){
       renderCard(item);
       current = item;
       sessionDrawnIds.add(item.id);
-      showActionStatus(`Selected: ${item.title}`);
-      const h = getHistory();
-      const last = h[h.length - 1];
-      currentWasCommitted = !!(last && last.id === item.id);
+      showActionStatus(`Selected: ${item.title}`, true);
       const idx = deck.findIndex(d => d.id === item.id);
       deckPtr = idx !== -1 ? idx : -1;
       setCardActions(true);
@@ -1192,7 +1184,7 @@ function showLibrary(){
   els.layout.classList.add('with-library');
   els.showLibraryBtn.setAttribute('aria-expanded', 'true');
   requestAnimationFrame(() => {
-    els.libraryPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    els.libraryPanel.scrollIntoView({ block: 'start' });
     els.libraryPanel.focus({ preventScroll: true });
   });
 }
