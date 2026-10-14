@@ -18,17 +18,13 @@
 <body>
 <header class="topbar">
   <h1>15funs</h1>
-  <p>Small adventures. Less deciding.</p>
+  <button id="showLibraryBtn" type="button" class="text-button" aria-expanded="false" aria-controls="libraryPanel">
+    Ideas
+  </button>
 </header>
 
 <main class="layout" id="layout">
-  <section class="panel card" aria-labelledby="draw-heading">
-    <div class="card-topline">
-      <h2 id="draw-heading">Your next idea</h2>
-      <button id="showLibraryBtn" type="button" class="text-button" aria-expanded="false" aria-controls="libraryPanel">
-        Browse ideas <span id="libraryStatus" class="library-count"></span>
-      </button>
-    </div>
+  <section class="panel card" aria-label="Activity picker">
     <div class="draw-actions" role="group" aria-label="Idea actions">
       <button id="drawBtn" type="button" class="primary">Draw an idea</button>
       <button id="doneBtn" type="button" class="success" disabled hidden>✓ Complete</button>
@@ -36,13 +32,13 @@
     </div>
     <p id="actionStatus" class="action-status" aria-live="polite" role="status" hidden></p>
     <div class="card-body" id="cardBody">
-      <p class="hint">Draw a surprise activity to do together.</p>
+      <p class="hint">Want something to do together?</p>
     </div>
   </section>
 
   <section class="panel settings" aria-labelledby="settings-title">
     <details id="settingsDetails">
-      <summary id="settings-title">Customize draws <span id="filterSummary" class="filter-summary">Up to 15 min</span></summary>
+      <summary id="settings-title"><span>Filters</span><span id="filterSummary" class="filter-summary">Up to 15 min</span></summary>
       <div class="settings-inner">
         <div class="row-grid">
           <label>
@@ -95,6 +91,7 @@
               <summary>About needs and categories</summary>
               <p>Needs are values such as Appreciation, Mutuality, Rest, Autonomy, and Belonging. They can help you choose an activity together.</p>
             </details>
+            <p class="hint privacy-note">Completed activities and settings stay in this browser. No account needed.</p>
           </div>
         </details>
       </div>
@@ -104,18 +101,16 @@
   <section class="panel list" id="libraryPanel" aria-labelledby="list-title" hidden tabindex="-1">
     <div class="library-head">
       <div>
-        <h2 id="list-title">Idea library</h2>
-        <div id="counts" class="hint"></div>
+        <h2 id="list-title">Ideas</h2>
+        <div id="counts" class="hint" aria-live="polite"></div>
       </div>
       <button id="hideLibraryBtn" type="button" class="secondary" aria-label="Close idea library">Close</button>
     </div>
+    <label class="library-search-label" for="librarySearch">Search ideas</label>
+    <input id="librarySearch" class="library-search" type="search" placeholder="Search titles, needs, categories" autocomplete="off">
     <ul id="ideasList" class="ideas"></ul>
   </section>
 </main>
-
-<footer class="foot">
-  <small>Completed activities are saved in this browser. 15funs works without an account.</small>
-</footer>
 <script src="app.js" type="module"></script>
 </body>
 </html>

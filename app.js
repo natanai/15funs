@@ -24,7 +24,7 @@ const els = {
   libraryPanel: document.getElementById('libraryPanel'),
   showLibraryBtn: document.getElementById('showLibraryBtn'),
   hideLibraryBtn: document.getElementById('hideLibraryBtn'),
-  libraryStatus: document.getElementById('libraryStatus'),
+  librarySearch: document.getElementById('librarySearch'),
   uploadInput: document.getElementById('uploadInput'),
   uploadBtn: document.getElementById('uploadBtn'),
   uploadStatus: document.getElementById('uploadStatus'),
@@ -157,7 +157,8 @@ async function init() {
   els.redrawBtn.onclick = () => draw().catch(err => console.error(err));
   els.doneBtn.onclick = markDone;
   els.showLibraryBtn.onclick = showLibrary;
-  els.hideLibraryBtn.onclick = hideLibrary;
+  els.hideLibraryBtn.onclick = () => hideLibrary();
+  els.librarySearch.addEventListener('input', renderList);
   els.libraryPanel.addEventListener('keydown', evt => {
     if (evt.key === 'Escape') {
       evt.preventDefault();
@@ -644,8 +645,8 @@ function markDone(){
   const finished = current;
   pushHistory(finished.id);
   renderList();
-  renderCard(null, 'Want another idea?');
-  showActionStatus(`Completed: ${finished.title}`);
+  renderCard(null, 'Completed. Ready for another?');
+  showActionStatus(`Completed: ${finished.title}`, true);
   els.drawBtn.focus({ preventScroll: true });
 }
 
@@ -668,7 +669,7 @@ function renderCard(idea, note){
 
   if (!idea){
     current = null;
-      card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
+    card.innerHTML = `<p class="hint">${note ?? 'Ready when you are.'}</p>`;
     setCardActions(false);
     return;
   }
@@ -720,18 +721,20 @@ function renderCard(idea, note){
 
   card.innerHTML = `
     <div class="card-content">
-      <div class="title">${escapeHtml(idea.title)}</div>
+      <h2 class="title">${escapeHtml(idea.title)}</h2>
       ${descHtml ? `<p class="desc">${descHtml}</p>` : ''}
       ${linkHtml}
-      ${timerHtml}
+      <div class="activity-tools">
+        ${timerHtml}
+        ${detailBadges.length ? `
+          <details class="idea-tags">
+            <summary>Tags</summary>
+            <div class="meta meta-details">${detailBadges.join('')}</div>
+          </details>
+        ` : ''}
+      </div>
       ${charadesHtml}
       ${questionHtml}
-      ${detailBadges.length ? `
-        <div class="meta meta-details" data-role="metaDetails" hidden>${detailBadges.join('')}</div>
-        <button type="button" class="meta-toggle" data-role="metaToggle" aria-expanded="false">
-          Show categories &amp; needs
-        </button>
-      ` : ''}
     </div>
   `;
 
@@ -744,16 +747,7 @@ function renderCard(idea, note){
     setupQuestionPoolFeature(idea).catch(err => console.error(err));
   }
 
-  const metaToggle = card.querySelector('[data-role=metaToggle]');
-  if (metaToggle) {
-    const metaDetails = card.querySelector('[data-role=metaDetails]');
-    metaToggle.addEventListener('click', () => {
-      const expanded = metaToggle.getAttribute('aria-expanded') === 'true';
-      metaToggle.setAttribute('aria-expanded', String(!expanded));
-      if (metaDetails) metaDetails.hidden = expanded;
-      metaToggle.textContent = expanded ? 'Show categories & needs' : 'Hide categories & needs';
-    });
-  }
+
 }
 
 function setupTimer(durationMinutes){
@@ -1093,19 +1087,27 @@ function escapeAttr(s){
 }
 
 function renderList(){
-  const list = applyFilters(dataset);
   const { recent } = idsNotUsedSince(int(els.avoidDays.value, DEFAULTS.avoidDays));
   const lastN = new Set(uniqueRecentIds(int(els.avoidCount.value, DEFAULTS.avoidCount)));
   const hideRecent = els.hideRecentlySeen.checked;
+  const query = els.librarySearch.value.trim().toLocaleLowerCase();
+  const filtered = applyFilters(dataset);
+  const visible = filtered.filter(item => {
+    const isRecent = recent.has(item.id) || lastN.has(item.id);
+    if (hideRecent && isRecent) return false;
+    if (!query) return true;
+    const searchable = [item.title, item.desc, item.category, item.energy, ...(item.needs || [])].join(' ').toLocaleLowerCase();
+    return searchable.includes(query);
+  });
 
-  const statusText = `${list.length} matching ideas · ${getHistory().length} completed`;
-  els.counts.textContent = statusText;
-  if (els.libraryStatus) {
-    els.libraryStatus.textContent = `(${list.length})`;
-  }
+  const hiddenRecentCount = hideRecent
+    ? filtered.filter(item => recent.has(item.id) || lastN.has(item.id)).length
+    : 0;
+  const countText = `${visible.length} idea${visible.length === 1 ? '' : 's'}`;
+  els.counts.textContent = `${countText}${hiddenRecentCount ? ` · ${hiddenRecentCount} recently completed hidden` : ''}`;
 
   const frag = document.createDocumentFragment();
-  list.forEach(item => {
+  visible.forEach(item => {
     const li = document.createElement('li');
     const left = document.createElement('div');
     left.className = 'left';
@@ -1114,28 +1116,23 @@ function renderList(){
     title.textContent = item.title;
     left.appendChild(title);
 
-    if (item.category) {
-      left.appendChild(createTag(item.category));
-    }
+    const summary = document.createElement('span');
+    summary.className = 'idea-row-meta';
+    summary.textContent = [item.category, `${item.duration} min`].filter(Boolean).join(' · ');
+    left.appendChild(summary);
 
-    if (Array.isArray(item.needs)) {
-      item.needs.forEach(need => {
-        left.appendChild(createTag(need));
-      });
-    }
-
-    left.appendChild(createTag(`${item.duration}m`));
-
-    const right = document.createElement('div'); right.className='right';
-    const isRecent = recent.has(item.id) || lastN.has(item.id);
-    if (isRecent) {
+    const right = document.createElement('div');
+    right.className = 'right';
+    if (!hideRecent && (recent.has(item.id) || lastN.has(item.id))) {
       const b = document.createElement('span');
-      b.className='badge recent';
-      b.textContent = 'recent';
+      b.className = 'recent-tag';
+      b.textContent = 'Recent';
       right.appendChild(b);
     }
+
     const go = document.createElement('button');
     go.textContent = 'Pick';
+    go.setAttribute('aria-label', `Pick ${item.title}`);
     go.onclick = () => {
       renderCard(item);
       current = item;
@@ -1144,14 +1141,21 @@ function renderList(){
       const idx = deck.findIndex(d => d.id === item.id);
       deckPtr = idx !== -1 ? idx : -1;
       setCardActions(true);
-      if (!els.libraryPanel.hidden) {
-        hideLibrary();
-      }
+      if (!els.libraryPanel.hidden) hideLibrary({ restoreFocus: false });
+      els.doneBtn.focus({ preventScroll: true });
     };
     right.appendChild(go);
-    li.appendChild(left); li.appendChild(right);
-    if (!(hideRecent && isRecent)) frag.appendChild(li);
+    li.appendChild(left);
+    li.appendChild(right);
+    frag.appendChild(li);
   });
+
+  if (!visible.length) {
+    const empty = document.createElement('li');
+    empty.className = 'library-empty';
+    empty.textContent = 'No ideas found. Try a different search or filter.';
+    frag.appendChild(empty);
+  }
   els.ideasList.replaceChildren(frag);
 }
 function createTag(text){
@@ -1189,9 +1193,9 @@ function showLibrary(){
   });
 }
 
-function hideLibrary(){
+function hideLibrary({ restoreFocus = true } = {}){
   els.libraryPanel.hidden = true;
   els.layout.classList.remove('with-library');
   els.showLibraryBtn.setAttribute('aria-expanded', 'false');
-  els.showLibraryBtn.focus();
+  if (restoreFocus) els.showLibraryBtn.focus({ preventScroll: true });
 }
