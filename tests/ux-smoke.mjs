@@ -18,7 +18,7 @@ function makeElement(id) {
     appendChild(child) { this.children.push(child); },
     replaceChildren(...children) { this.children = children; },
     setAttribute() {}, querySelector() { return null; },
-    focus() {}, scrollIntoView() {}, addEventListener() {},
+    focus() { this.focusCount = (this.focusCount || 0) + 1; }, scrollIntoView() {}, addEventListener() {},
   };
 }
 
@@ -54,6 +54,7 @@ function harness(initialCsv) {
         reloadData, draw, markDone, filtersChanged, renderList, resetHistory,
         getCurrent: () => current, getHistory: () => getHistory(),
         getDataset: () => dataset, getSession: () => [...sessionDrawnIds],
+        showLibrary, hideLibrary,
         setupTimer, toggleTimer, resetTimer, teardownTimer, formatDurationMs,
         getTimerState: () => timerState,
       };
@@ -185,5 +186,41 @@ assert.equal(timer.toggle.textContent, 'Start');
 assert.equal(timer.reset.hidden, true, 'Reset goes away in ready state');
 app.teardownTimer();
 assert.equal(app.getTimerState().elements, null);
+
+// Library browsing should preserve compact list semantics and keyboard focus.
+const library = harness(csv('Dance', 'Read', 'Sketch'));
+await library.app.reloadData();
+assert.equal(library.elements.counts.textContent, '3 ideas');
+library.elements.librarySearch.value = 'dance';
+library.app.renderList();
+assert.equal(library.elements.counts.textContent, '1 idea');
+const firstRow = library.elements.ideasList.children[0].children[0];
+assert.equal(firstRow.children[0].children[0].textContent, 'Dance');
+assert.equal(firstRow.children[0].children[1].textContent, 'play · 15 min');
+library.app.showLibrary();
+assert.equal(library.elements.libraryPanel.hidden, false);
+firstRow.children[1].children[0].onclick();
+assert.equal(library.app.getCurrent().title, 'Dance');
+assert.equal(library.elements.libraryPanel.hidden, true);
+assert.ok(library.elements.doneBtn.focusCount >= 1, 'Choosing from library returns focus to activity action');
+assert.equal(library.elements.showLibraryBtn.focusCount || 0, 0, 'Avoid focusing the now-closed library trigger after selecting');
+
+library.elements.librarySearch.value = 'not-found-123';
+library.app.renderList();
+assert.equal(library.elements.counts.textContent, '0 ideas');
+assert.equal(library.elements.ideasList.children[0].children[0].className, 'library-empty');
+library.app.showLibrary();
+library.app.hideLibrary();
+assert.ok(library.elements.showLibraryBtn.focusCount >= 1, 'Closing the library restores focus to trigger');
+
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+assert.ok(html.includes('id="librarySearch"'), 'Library search input should exist');
+assert.ok(!html.includes('<footer class="foot"'), 'Do not repeat storage information below the main flow');
+assert.ok(!html.includes('id="libraryStatus"'), 'Do not use space for a top-level count');
+assert.ok(source.includes('<details class="idea-tags">'), 'Keep extra tags optional');
+assert.ok(source.includes('<div class="activity-tools">'), 'Timer and tags share one compact row');
+assert.ok(!source.includes('metaToggle'), 'Remove redundant Show categories & needs button');
+assert.ok(!css.includes("content: '⚙'"), 'Do not use browser-dependent gear emoji');
 
 console.log('15funs UX smoke tests passed');
