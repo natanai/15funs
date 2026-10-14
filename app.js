@@ -724,15 +724,17 @@ function renderCard(idea, note){
       <h2 class="title">${escapeHtml(idea.title)}</h2>
       ${descHtml ? `<p class="desc">${descHtml}</p>` : ''}
       ${linkHtml}
-      ${timerHtml}
+      <div class="activity-tools">
+        ${timerHtml}
+        ${detailBadges.length ? `
+          <details class="idea-tags">
+            <summary>Tags</summary>
+            <div class="meta meta-details">${detailBadges.join('')}</div>
+          </details>
+        ` : ''}
+      </div>
       ${charadesHtml}
       ${questionHtml}
-      ${detailBadges.length ? `
-        <details class="idea-tags">
-          <summary>Tags</summary>
-          <div class="meta meta-details">${detailBadges.join('')}</div>
-        </details>
-      ` : ''}
     </div>
   `;
 
