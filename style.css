@@ -147,28 +147,51 @@ button.text-button {
 .meta-primary { color: var(--muted); }
 .meta-details { margin: 4px 0; }
 .meta-toggle { min-height: 44px; color: var(--accent); background: none; border: 0; box-shadow: none; padding: 4px; font-size: 19px; text-decoration: underline; }
+/* The single time value serves as both the activity duration and optional countdown. */
 .timer {
-  display: grid;
-  gap: 8px;
-  width: min(100%,500px);
-  padding: 8px 10px;
-  border: 1px solid #798299;
-  background: #283146;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 6px;
+  width: min(100%, 380px);
+  padding: 10px 0 0;
+  margin: 0;
+  border-top: 1px solid #798299;
 }
-.timer summary {
-  cursor: pointer;
-  min-height: 44px;
+.timer-label {
+  color: var(--muted);
   font-size: 20px;
-  color: var(--text);
-  list-style-position: inside;
 }
-.timer-head, .timer-controls { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
-.timer-head .label { color: var(--muted); font-size: 19px; }
-.timer-display { font: 15px/1.4 "Press Start 2P", monospace; color: var(--accent); font-variant-numeric: tabular-nums; }
-.timer-btn { min-height: 44px; padding: 6px 12px; font-size: 21px; }
-.timer.is-finished { border-color: var(--accent); }
+.timer-display {
+  color: var(--accent);
+  font: 14px/1.4 "Press Start 2P", monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.timer-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.timer-btn {
+  min-height: 44px;
+  padding: 5px 10px;
+  font-size: 21px;
+}
+.timer-reset {
+  color: var(--text);
+  background: transparent;
+  border-color: #798299;
+  box-shadow: none;
+}
 .timer.is-finished .timer-display { color: var(--accent-2); }
+@media (max-width: 355px) {
+  .timer { column-gap: 7px; }
+  .timer-display { font-size: 12px; }
+  .timer-btn { padding-inline: 8px; }
+}
 .charades, .question-pool {
   width: 100%;
   background: var(--panel);

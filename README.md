@@ -9,7 +9,7 @@ A static GitHub Pages app for drawing screen-free, ~15-minute ideas without rece
 - **↻ Another** rejects the current suggestion **without** recording it as completed. The picker avoids suggestions already drawn in the current cycle, even if they were rejected.
 - **Customize draws** stays folded away unless needed. **More options** contains source management, history reset, and less-used settings.
 - **Browse ideas** opens the full list without spoiling the next random suggestion.
-- An optional timer starts only when the user presses **Start**. It doesn't begin counting down while someone is reading a suggestion.
+- Each idea uses a **single duration/time display** in a compact, always-visible **Timer · 10:00 · Start** row. No emoji, duplicate duration badge, or dropdown. The timer starts only when **Start** is pressed; **Reset** appears only after starting.
 
 ## Testing
 
