@@ -478,11 +478,12 @@ function normalizeNeeds(raw){
   const seen = new Set();
   const result = [];
   parts.forEach(part => {
-    const key = part.toLowerCase();
-    const canonical = NEED_LOOKUP.get(key);
-    if (canonical && !seen.has(canonical)) {
-      seen.add(canonical);
-      result.push(canonical);
+    // Keep meaningful free-text tags that are not in the original NVC list.
+    const normalized = NEED_LOOKUP.get(part.toLowerCase()) || part.trim();
+    const key = normalized.toLowerCase();
+    if (normalized && !seen.has(key)) {
+      seen.add(key);
+      result.push(normalized);
     }
   });
   return result;
@@ -1166,9 +1167,10 @@ function createTag(text){
 }
 function populateFilters(list){
   const cats = Array.from(new Set(list.map(x => x.category).filter(Boolean))).sort();
+  const needs = Array.from(new Set(list.flatMap(x => x.needs || []))).sort((a, b) => a.localeCompare(b));
 
   fillSelect(els.categoryFilter, cats);
-  fillSelect(els.needFilter, ALL_NEEDS);
+  fillSelect(els.needFilter, needs);
 }
 function fillSelect(sel, values){
   const cur = sel.value;

@@ -57,6 +57,7 @@ function harness(initialCsv) {
         showLibrary, hideLibrary,
         setupTimer, toggleTimer, resetTimer, teardownTimer, formatDurationMs,
         getTimerState: () => timerState,
+        normalizeNeeds,
       };
     `
   );
@@ -223,4 +224,11 @@ assert.ok(source.includes('<div class="activity-tools">'), 'Timer and tags share
 assert.ok(!source.includes('metaToggle'), 'Remove redundant Show categories & needs button');
 assert.ok(!css.includes("content: '⚙'"), 'Do not use browser-dependent gear emoji');
 
+// Needs tags not in the initial NVC list must remain visible and filterable.
+const needsCase = harness('title,desc,category,needs,duration,energy,link,link_label\nPlay together,Do a shared playful activity.,play,Play|Mutuality|Play,5,calm,,');
+await needsCase.app.reloadData();
+assert.deepEqual(needsCase.app.getDataset()[0].needs, ['Play', 'Mutuality']);
+assert.deepEqual(needsCase.app.normalizeNeeds('Focus|Play|Focus'), ['Focus', 'Play']);
+assert.match(needsCase.elements.needFilter.innerHTML, /Play/);
+assert.match(needsCase.elements.needFilter.innerHTML, /Mutuality/);
 console.log('15funs UX smoke tests passed');
