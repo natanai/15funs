@@ -13,13 +13,13 @@ A static GitHub Pages app for drawing screen-free, ~15-minute ideas without rece
 
 ## Testing
 
-Run the dependency-free interaction tests with `node tests/ux-smoke.mjs`. The tests cover drawing, redraw without completion, shuffle continuity, changed CSV content, completion persistence, unavailable alternatives, failed network refreshes, library search and focus restoration.
+Run the dependency-free interaction tests with `node tests/ux-smoke.mjs` and catalog-preservation checks with `node tests/activity-data.mjs`. The tests cover drawing, redraw without completion, shuffle continuity, changed CSV content, completion persistence, unavailable alternatives, failed network refreshes, library search and focus restoration.
 
 Before merging a visual change, check on iOS Safari and installed Home Screen mode: initial draw, long description, dock over safe area, filters, keyboard, portrait/landscape, Browse/Close, large text, and reduced motion. Automated logic tests do **not** replace these visual checks.
 
 ## The one thing to know: `data/ideas.csv` is the source of truth
 
-To add, remove, or edit ideas on the site, edit **`data/ideas.csv`**. The app loads that CSV directly in the browser, with a cache-busting timestamp, so every press of **Draw** refreshes from the current CSV before choosing the next idea.
+To add, remove, or edit ideas on the site, edit **`data/ideas.csv`**. The full review of the original 73 activities is documented in [the activity-copy audit](docs/activity-copy-audit.md). Please keep existing `id` values unchanged when editing titles, descriptions or times, to preserve completed-activity history. The app loads that CSV directly in the browser, with a cache-busting timestamp, so every press of **Draw** refreshes from the current CSV before choosing the next idea.
 
 There is also a sample `data/ideas.json`, but it is **not the default source** and there is **no GitHub Action** that syncs CSV ↔ JSON or resets site items from a spreadsheet. Unless you intentionally paste a different source into the site’s **Data source** field, maintain only `data/ideas.csv`.
 
@@ -45,7 +45,7 @@ The only required column is `title`. These columns are understood by the app:
 | `energy` | No | Free-text energy label for organizing rows. |
 | `link` | No | Optional resource URL displayed with the idea. |
 | `link_label` | No | Optional text for the resource link. |
-| `id` | No | Stable ID for repeat history. If omitted, the app generates one from row content. |
+| `id` | No for new ideas; preserve it for existing ones | Stable ID for completion history. Every existing idea now has a fixed ID so wording changes do not erase its history association. |
 
 ### Spreadsheet workflow
 
