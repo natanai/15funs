@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'app.js'
+      - 'data/**'
       - 'index.html'
       - 'style.css'
       - 'tests/**'
@@ -12,6 +13,7 @@ on:
     branches: [main]
     paths:
       - 'app.js'
+      - 'data/**'
       - 'index.html'
       - 'style.css'
       - 'tests/**'
@@ -30,3 +32,4 @@ jobs:
           node-version: '22'
       - run: node --check app.js
       - run: node tests/ux-smoke.mjs
+      - run: node tests/activity-data.mjs
