@@ -8,7 +8,7 @@ assert.ok(source.includes("init().catch(err => showError(err));"), 'Expected app
 assert.ok(source.includes('<div class="timer" data-role="timer"'), 'Timer should be visible without disclosure');
 assert.ok(!source.includes('<details class="timer"'), 'Timer must not require a dropdown');
 assert.ok(!source.includes('durationBadge'), 'Do not duplicate the time value');
-assert.ok(!source.includes('⏱'), 'Timer should match the site's typography, not use an emoji');
+assert.ok(!source.includes('⏱'), 'Timer should use site typography instead of an emoji');
 
 function makeElement(id) {
   return {
