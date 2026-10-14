@@ -673,7 +673,6 @@ function renderCard(idea, note){
     return;
   }
 
-  const durationBadge = `<span class="badge badge-duration">${idea.duration} min</span>`;
   const detailBadges = [];
   if (idea.category) detailBadges.push(`<span class="badge">${escapeHtml(idea.category)}</span>`);
   if (Array.isArray(idea.needs)) {
@@ -685,17 +684,14 @@ function renderCard(idea, note){
     ? `<p class="resource"><a href="${escapeAttr(idea.link)}" target="_blank" rel="noopener">${escapeHtml(idea.linkLabel || 'Open resource')} ↗</a></p>`
     : '';
   const timerHtml = `
-    <details class="timer" data-role="timer">
-      <summary>⏱ ${idea.duration} min timer (optional)</summary>
-      <div class="timer-head">
-        <span class="label">Countdown</span>
-        <span class="timer-display" data-role="timerValue">${formatDurationMs(idea.duration * 60000)}</span>
-      </div>
+    <div class="timer" data-role="timer" role="group" aria-label="Activity timer">
+      <span class="timer-label">Timer</span>
+      <span class="timer-display" data-role="timerValue">${formatDurationMs(idea.duration * 60000)}</span>
       <div class="timer-controls">
         <button type="button" class="timer-btn" data-role="timerToggle">Start</button>
-        <button type="button" class="timer-btn" data-role="timerReset">Reset</button>
+        <button type="button" class="timer-btn timer-reset" data-role="timerReset" hidden>Reset</button>
       </div>
-    </details>`;
+    </div>`;
 
   const charadesHtml = isCharadesIdea(idea)
     ? `
@@ -727,7 +723,6 @@ function renderCard(idea, note){
       <div class="title">${escapeHtml(idea.title)}</div>
       ${descHtml ? `<p class="desc">${descHtml}</p>` : ''}
       ${linkHtml}
-      <div class="meta meta-primary">${durationBadge}</div>
       ${timerHtml}
       ${charadesHtml}
       ${questionHtml}
@@ -798,6 +793,7 @@ function startTimerCountdown(){
   if (timerState.intervalId) clearInterval(timerState.intervalId);
   timerState.intervalId = setInterval(tickTimer, 250);
   if (timerState.elements.toggle) timerState.elements.toggle.textContent = 'Pause';
+  if (timerState.elements.reset) timerState.elements.reset.hidden = false;
   tickTimer();
 }
 
@@ -868,6 +864,8 @@ function resetTimer(){
   timerState.elements.container?.classList.remove('is-finished');
   updateTimerDisplay();
   timerState.elements.toggle.textContent = 'Start';
+  if (timerState.elements.reset) timerState.elements.reset.hidden = true;
+  timerState.elements.toggle?.focus({ preventScroll: true });
 }
 
 function onTimerToggle(evt){
