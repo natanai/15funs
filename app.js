@@ -616,6 +616,7 @@ async function draw() {
     current = next;
     renderCard(next);
     showActionStatus(`Drawn: ${next.title}`, true);
+    els.doneBtn.focus({ preventScroll: true });
   } catch (err) {
     showError(err);
   } finally {
@@ -645,6 +646,7 @@ function markDone(){
   renderList();
   renderCard(null, 'Want another idea?');
   showActionStatus(`Completed: ${finished.title}`);
+  els.drawBtn.focus({ preventScroll: true });
 }
 
 function resetHistory(){
