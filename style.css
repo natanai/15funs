@@ -388,3 +388,123 @@ input, select {
   .activity-tools { column-gap: 6px; }
   .activity-tools .timer { column-gap: 6px; }
 }
+
+/* Mobile playing surface: give the unused viewport to the idea, not the page background.
+   The action floats above the bottom gesture/browser region with reserved content space. */
+@media (max-width: 600px) {
+  :root {
+    --draw-dock-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    --draw-dock-height: 68px;
+    --draw-dock-clearance: calc(178px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: var(--draw-dock-clearance);
+  }
+
+  .topbar {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .layout > .card {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    min-height: 260px;
+  }
+
+  .layout > .card .card-body {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 235px;
+    margin: 0;
+  }
+
+  .card.is-idle .card-body > .hint {
+    max-width: 26ch;
+    margin: 0;
+    text-align: center;
+  }
+
+  .card-body.has-idea .card-content {
+    width: 100%;
+  }
+
+  .layout > .settings,
+  .layout > .list {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .draw-actions {
+    position: fixed;
+    z-index: 30;
+    bottom: var(--draw-dock-bottom);
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    display: flex;
+    align-items: stretch;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .draw-actions > button {
+    min-height: var(--draw-dock-height);
+    touch-action: manipulation;
+  }
+
+  /* Browsing and editing settings need the viewport, not a tall empty card. */
+  body:has(#libraryPanel:not([hidden])),
+  body:has(input:focus, select:focus) {
+    padding-bottom: 24px;
+  }
+
+  body:has(#libraryPanel:not([hidden])) .layout,
+  body:has(input:focus, select:focus) .layout {
+    flex: 0 0 auto;
+  }
+
+  body:has(#libraryPanel:not([hidden])) .layout > .card,
+  body:has(input:focus, select:focus) .layout > .card,
+  body:has(#settingsDetails[open]) .layout > .card {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  body:has(#libraryPanel:not([hidden])) .layout > .card .card-body,
+  body:has(input:focus, select:focus) .layout > .card .card-body,
+  body:has(#settingsDetails[open]) .layout > .card .card-body {
+    flex: 0 0 auto;
+    min-height: 110px;
+  }
+}
+
+/* A shorter viewport should scroll naturally instead of squeezing the controls. */
+@media (max-width: 600px) and (max-height: 550px) {
+  :root {
+    --draw-dock-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    --draw-dock-height: 52px;
+    --draw-dock-clearance: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+  .layout > .card { min-height: 190px; }
+  .layout > .card .card-body { min-height: 165px; }
+}
