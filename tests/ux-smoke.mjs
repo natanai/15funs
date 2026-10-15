@@ -14,7 +14,18 @@ function makeElement(id) {
   return {
     id, value: '', hidden: false, disabled: false, textContent: '', innerHTML: '', checked: false,
     children: [], options: [{ value: '' }],
-    classList: { add() {}, remove() {}, toggle() {} },
+    classList: {
+      tokens: new Set(),
+      add(...names) { names.forEach(name => this.tokens.add(name)); },
+      remove(...names) { names.forEach(name => this.tokens.delete(name)); },
+      toggle(name, force) {
+        const include = force === undefined ? !this.tokens.has(name) : !!force;
+        if (include) this.tokens.add(name);
+        else this.tokens.delete(name);
+        return include;
+      },
+      contains(name) { return this.tokens.has(name); },
+    },
     appendChild(child) { this.children.push(child); },
     replaceChildren(...children) { this.children = children; },
     setAttribute() {}, querySelector() { return null; },
@@ -95,12 +106,14 @@ await app.reloadData();
 assert.equal(app.getDataset().length, 3);
 assert.equal(app.getCurrent(), null);
 assert.equal(elements.drawBtn.hidden, false);
+assert.equal(elements.cardPanel.classList.contains('is-idle'), true, 'Ready state expands the idea surface');
 
 const firstCycle = [];
 for (let i = 0; i < 3; i++) {
   await app.draw();
   firstCycle.push(app.getCurrent().title);
 }
+assert.equal(elements.cardPanel.classList.contains('is-idle'), false, 'Drawing leaves the blank-card state');
 assert.equal(new Set(firstCycle).size, 3, 'Redraw should not repeat during a cycle');
 assert.equal(app.getHistory().length, 0, 'Drawing/rejecting is not completing');
 await app.draw();
@@ -110,6 +123,7 @@ const completed = app.getCurrent().title;
 app.markDone();
 assert.equal(app.getHistory().length, 1, 'Complete should save history');
 assert.equal(app.getCurrent(), null, 'Complete returns to ready state');
+assert.equal(elements.cardPanel.classList.contains('is-idle'), true, 'Completing restores the large blank card');
 assert.equal(elements.drawBtn.hidden, false, 'Draw should return in place');
 assert.equal(elements.doneBtn.hidden, true);
 assert.ok(elements.actionStatus.textContent.includes(completed));
@@ -231,4 +245,12 @@ assert.deepEqual(needsCase.app.getDataset()[0].needs, ['Play', 'Mutuality']);
 assert.deepEqual(needsCase.app.normalizeNeeds('Focus|Play|Focus'), ['Focus', 'Play']);
 assert.match(needsCase.elements.needFilter.innerHTML, /Play/);
 assert.match(needsCase.elements.needFilter.innerHTML, /Mutuality/);
+// The viewport is devoted to a proper blank idea card; thumb controls float higher.
+assert.match(html, /id="cardPanel"[^>]*aria-label="Activity picker"/);
+assert.match(css, /--draw-dock-bottom:\s*calc\(76px \+ env\(safe-area-inset-bottom/);
+assert.match(css, /--draw-dock-clearance:\s*calc\(178px \+ env\(safe-area-inset-bottom/);
+assert.match(css, /\.layout > \.card \.card-body\s*\{/);
+assert.match(css, /\.card\.is-idle \.card-body > \.hint/);
+assert.match(css, /body:has\(#libraryPanel:not\(\[hidden\]\)\)/);
+
 console.log('15funs UX smoke tests passed');
