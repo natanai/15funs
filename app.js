@@ -4,6 +4,7 @@
 
 const els = {
   layout: document.getElementById('layout'),
+  cardPanel: document.getElementById('cardPanel'),
   dataUrl: document.getElementById('dataUrl'),
   reloadBtn: document.getElementById('reloadBtn'),
   avoidDays: document.getElementById('avoidDays'),
@@ -665,6 +666,7 @@ function resetHistory(){
 function renderCard(idea, note){
   teardownTimer();
   const card = els.cardBody;
+  els.cardPanel.classList.toggle('is-idle', !idea);
   card.classList.remove('is-revealing');
   card.classList.toggle('has-idea', !!idea);
 
