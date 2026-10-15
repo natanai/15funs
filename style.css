@@ -393,9 +393,9 @@ input, select {
    The action floats above the bottom gesture/browser region with reserved content space. */
 @media (max-width: 600px) {
   :root {
-    --draw-dock-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-    --draw-dock-height: 68px;
-    --draw-dock-clearance: calc(178px + env(safe-area-inset-bottom, 0px));
+    --draw-dock-bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+    --draw-dock-height: 60px;
+    --draw-dock-clearance: calc(112px + env(safe-area-inset-bottom, 0px));
   }
 
   body {
@@ -414,15 +414,22 @@ input, select {
   .layout {
     display: flex;
     flex-direction: column;
+    /* Override the desktop grid's align-items: start; without this, the
+       flex children shrink to their text widths on iPhone Safari. */
+    align-items: stretch;
     flex: 1 0 auto;
     width: 100%;
+    min-width: 0;
     min-height: 0;
   }
 
   .layout > .card {
     display: flex;
     flex-direction: column;
+    align-self: stretch;
     flex: 1 0 auto;
+    width: 100%;
+    min-width: 0;
     min-height: 260px;
   }
 
@@ -431,6 +438,8 @@ input, select {
     flex: 1 1 auto;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-width: 0;
     min-height: 235px;
     margin: 0;
   }

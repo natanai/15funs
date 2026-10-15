@@ -247,9 +247,10 @@ assert.match(needsCase.elements.needFilter.innerHTML, /Play/);
 assert.match(needsCase.elements.needFilter.innerHTML, /Mutuality/);
 // The viewport is devoted to a proper blank idea card; thumb controls float higher.
 assert.match(html, /id="cardPanel"[^>]*aria-label="Activity picker"/);
-assert.match(css, /--draw-dock-bottom:\s*calc\(76px \+ env\(safe-area-inset-bottom/);
-assert.match(css, /--draw-dock-clearance:\s*calc\(178px \+ env\(safe-area-inset-bottom/);
+assert.match(css, /--draw-dock-bottom:\s*calc\(34px \+ env\(safe-area-inset-bottom/);
+assert.match(css, /--draw-dock-clearance:\s*calc\(112px \+ env\(safe-area-inset-bottom/);
 assert.match(css, /\.layout > \.card \.card-body\s*\{/);
+assert.match(css, /align-items:\s*stretch;/, 'The mobile stack must override desktop alignment');
 assert.match(css, /\.card\.is-idle \.card-body > \.hint/);
 assert.match(css, /body:has\(#libraryPanel:not\(\[hidden\]\)\)/);
 
