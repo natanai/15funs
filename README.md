@@ -4,7 +4,7 @@ A static GitHub Pages app for drawing screen-free, ~15-minute ideas without rece
 
 ## Mobile interaction contract
 
-- **Draw an idea** is the one primary action when no idea is selected. On mobile, the action stays within reach in a bottom dock, even after a long card or completion message.
+- **Draw an idea** is the one primary action when no idea is selected. On mobile, the idle card fills the available space and centers its quiet "Ready when you are" message. The action floats above the bottom safe area (instead of sticking to the screen edge), with reserved space so it never covers content.
 - **✓ Complete** means the activity actually happened. It saves an entry in the local history, returns to the ready state, and makes **Draw next idea** immediately available in the same place.
 - **↻ Another** rejects the current suggestion **without** recording it as completed. The picker avoids suggestions already drawn in the current cycle, even if they were rejected.
 - **Filters** stays folded away unless needed. **More options** contains source management, history reset, and less-used settings.
@@ -15,7 +15,7 @@ A static GitHub Pages app for drawing screen-free, ~15-minute ideas without rece
 
 Run the dependency-free interaction tests with `node tests/ux-smoke.mjs` and catalog-preservation checks with `node tests/activity-data.mjs`. The tests cover drawing, redraw without completion, shuffle continuity, changed CSV content, completion persistence, unavailable alternatives, failed network refreshes, library search and focus restoration.
 
-Before merging a visual change, check on iOS Safari and installed Home Screen mode: initial draw, long description, dock over safe area, filters, keyboard, portrait/landscape, Browse/Close, large text, and reduced motion. Automated logic tests do **not** replace these visual checks.
+Before merging a visual change, check on iOS Safari and installed Home Screen mode: blank idea card fills the resting viewport, Draw/Complete buttons sit above the bottom gesture region, long descriptions scroll instead of being covered, open filters/library collapse the blank card, portrait/landscape, keyboard, large text, and reduced motion. Automated logic tests do **not** replace these visual checks.
 
 ## The one thing to know: `data/ideas.csv` is the source of truth
 
